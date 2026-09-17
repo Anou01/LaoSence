@@ -1,0 +1,418 @@
+{
+  "metadata": {
+    "schemaVersion": 1,
+    "selection": {
+      "method": "longitude-thirds",
+      "minimumPublishedCells": 5,
+      "fallbackUsed": false,
+      "reason": "Selected one non-overlapping 3x3 block in each longitude third with at least five published cells."
+    }
+  },
+  "areas": [
+    {
+      "id": "area-a",
+      "name": "Area A",
+      "dimensions": {
+        "rows": 3,
+        "cols": 3
+      },
+      "areaKm2Approx": 0.5625,
+      "cellIds": [
+        "8014_43442",
+        "8014_43443",
+        "8014_43444",
+        "8015_43442",
+        "8015_43443",
+        "8015_43444",
+        "8016_43442",
+        "8016_43443",
+        "8016_43444"
+      ],
+      "bounds": {
+        "south": 17.997664390945022,
+        "west": 102.58179560132682,
+        "north": 18.004401724757457,
+        "east": 102.58887965332268
+      },
+      "publishedCellCount": 5,
+      "observationCount": 46,
+      "uniqueNetworkCount": 46,
+      "medianSignalDbm": -79.5,
+      "bandCounts": {
+        "2.4GHz": 33,
+        "5GHz": 13,
+        "otherUnknown": 0
+      },
+      "authenticationCounts": {
+        "Open": 2,
+        "WPA2 Personal": 44
+      },
+      "encryptionCounts": {
+        "CCMP": 44,
+        "Other / Unknown": 2
+      },
+      "topChannels": [
+        {
+          "channel": 1,
+          "observations": 8
+        },
+        {
+          "channel": 3,
+          "observations": 4
+        },
+        {
+          "channel": 4,
+          "observations": 4
+        },
+        {
+          "channel": 11,
+          "observations": 4
+        },
+        {
+          "channel": 149,
+          "observations": 4
+        },
+        {
+          "channel": 6,
+          "observations": 3
+        },
+        {
+          "channel": 7,
+          "observations": 3
+        },
+        {
+          "channel": 8,
+          "observations": 2
+        },
+        {
+          "channel": 36,
+          "observations": 2
+        },
+        {
+          "channel": 40,
+          "observations": 2
+        },
+        {
+          "channel": 2,
+          "observations": 1
+        },
+        {
+          "channel": 9,
+          "observations": 1
+        },
+        {
+          "channel": 10,
+          "observations": 1
+        },
+        {
+          "channel": 12,
+          "observations": 1
+        },
+        {
+          "channel": 13,
+          "observations": 1
+        },
+        {
+          "channel": 44,
+          "observations": 1
+        },
+        {
+          "channel": 48,
+          "observations": 1
+        },
+        {
+          "channel": 52,
+          "observations": 1
+        },
+        {
+          "channel": 153,
+          "observations": 1
+        },
+        {
+          "channel": 161,
+          "observations": 1
+        }
+      ]
+    },
+    {
+      "id": "area-b",
+      "name": "Area B",
+      "dimensions": {
+        "rows": 3,
+        "cols": 3
+      },
+      "areaKm2Approx": 0.5625,
+      "cellIds": [
+        "8013_43450",
+        "8013_43451",
+        "8013_43452",
+        "8014_43450",
+        "8014_43451",
+        "8014_43452",
+        "8015_43450",
+        "8015_43451",
+        "8015_43452"
+      ],
+      "bounds": {
+        "south": 17.995418613007544,
+        "west": 102.6006864066491,
+        "north": 18.00215594681998,
+        "east": 102.60777045864496
+      },
+      "publishedCellCount": 8,
+      "observationCount": 391,
+      "uniqueNetworkCount": 391,
+      "medianSignalDbm": -77,
+      "bandCounts": {
+        "2.4GHz": 267,
+        "5GHz": 124,
+        "otherUnknown": 0
+      },
+      "authenticationCounts": {
+        "OWE": 3,
+        "Open": 18,
+        "WPA Personal": 1,
+        "WPA2 Personal": 369
+      },
+      "encryptionCounts": {
+        "CCMP": 373,
+        "Other / Unknown": 18
+      },
+      "topChannels": [
+        {
+          "channel": 1,
+          "observations": 56
+        },
+        {
+          "channel": 36,
+          "observations": 55
+        },
+        {
+          "channel": 11,
+          "observations": 46
+        },
+        {
+          "channel": 149,
+          "observations": 40
+        },
+        {
+          "channel": 6,
+          "observations": 31
+        },
+        {
+          "channel": 4,
+          "observations": 25
+        },
+        {
+          "channel": 5,
+          "observations": 21
+        },
+        {
+          "channel": 3,
+          "observations": 17
+        },
+        {
+          "channel": 2,
+          "observations": 15
+        },
+        {
+          "channel": 9,
+          "observations": 15
+        },
+        {
+          "channel": 7,
+          "observations": 13
+        },
+        {
+          "channel": 10,
+          "observations": 13
+        },
+        {
+          "channel": 48,
+          "observations": 12
+        },
+        {
+          "channel": 8,
+          "observations": 11
+        },
+        {
+          "channel": 40,
+          "observations": 6
+        },
+        {
+          "channel": 44,
+          "observations": 5
+        },
+        {
+          "channel": 13,
+          "observations": 4
+        },
+        {
+          "channel": 100,
+          "observations": 3
+        },
+        {
+          "channel": 52,
+          "observations": 1
+        },
+        {
+          "channel": 116,
+          "observations": 1
+        },
+        {
+          "channel": 153,
+          "observations": 1
+        }
+      ]
+    },
+    {
+      "id": "area-c",
+      "name": "Area C",
+      "dimensions": {
+        "rows": 3,
+        "cols": 3
+      },
+      "areaKm2Approx": 0.5625,
+      "cellIds": [
+        "8013_43458",
+        "8013_43459",
+        "8013_43460",
+        "8014_43458",
+        "8014_43459",
+        "8014_43460",
+        "8015_43458",
+        "8015_43459",
+        "8015_43460"
+      ],
+      "bounds": {
+        "south": 17.995418613007544,
+        "west": 102.61957721197139,
+        "north": 18.00215594681998,
+        "east": 102.62666126396725
+      },
+      "publishedCellCount": 8,
+      "observationCount": 447,
+      "uniqueNetworkCount": 394,
+      "medianSignalDbm": -69,
+      "bandCounts": {
+        "2.4GHz": 316,
+        "5GHz": 131,
+        "otherUnknown": 0
+      },
+      "authenticationCounts": {
+        "OWE": 9,
+        "Open": 6,
+        "WPA Personal": 3,
+        "WPA2 Enterprise": 1,
+        "WPA2 Personal": 428
+      },
+      "encryptionCounts": {
+        "CCMP": 439,
+        "Other / Unknown": 6,
+        "TKIP": 2
+      },
+      "topChannels": [
+        {
+          "channel": 1,
+          "observations": 60
+        },
+        {
+          "channel": 36,
+          "observations": 49
+        },
+        {
+          "channel": 11,
+          "observations": 48
+        },
+        {
+          "channel": 6,
+          "observations": 33
+        },
+        {
+          "channel": 149,
+          "observations": 32
+        },
+        {
+          "channel": 2,
+          "observations": 25
+        },
+        {
+          "channel": 5,
+          "observations": 24
+        },
+        {
+          "channel": 8,
+          "observations": 24
+        },
+        {
+          "channel": 3,
+          "observations": 22
+        },
+        {
+          "channel": 10,
+          "observations": 22
+        },
+        {
+          "channel": 4,
+          "observations": 21
+        },
+        {
+          "channel": 9,
+          "observations": 20
+        },
+        {
+          "channel": 7,
+          "observations": 15
+        },
+        {
+          "channel": 40,
+          "observations": 13
+        },
+        {
+          "channel": 48,
+          "observations": 10
+        },
+        {
+          "channel": 44,
+          "observations": 8
+        },
+        {
+          "channel": 100,
+          "observations": 4
+        },
+        {
+          "channel": 52,
+          "observations": 3
+        },
+        {
+          "channel": 153,
+          "observations": 3
+        },
+        {
+          "channel": 157,
+          "observations": 3
+        },
+        {
+          "channel": 13,
+          "observations": 2
+        },
+        {
+          "channel": 124,
+          "observations": 2
+        },
+        {
+          "channel": 161,
+          "observations": 2
+        },
+        {
+          "channel": 112,
+          "observations": 1
+        },
+        {
+          "channel": 116,
+          "observations": 1
+        }
+      ]
+    }
+  ]
+}

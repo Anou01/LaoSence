@@ -1,0 +1,240 @@
+{
+  "schemaVersion": 1,
+  "sourceLabel": "Chanthabuly historical survey dataset",
+  "historicalSurveyPeriod": "Approximately November 2024 – March 2025",
+  "inputObservationCount": 32165,
+  "rejectedObservationCount": 1,
+  "rejectionCounts": {
+    "invalidCoordinates": 0,
+    "invalidSignal": 1
+  },
+  "publishedCellCount": 380,
+  "suppressedCellCount": 39,
+  "observationCount": 32164,
+  "uniqueNetworkCount": 25291,
+  "medianSignalDbm": -75,
+  "bandCounts": {
+    "2.4GHz": 21579,
+    "5GHz": 10585,
+    "otherUnknown": 0
+  },
+  "authenticationCounts": {
+    "OWE": 772,
+    "Open": 1605,
+    "WPA Personal": 185,
+    "WPA2 Enterprise": 110,
+    "WPA2 Personal": 29491,
+    "WPA3 Personal": 1
+  },
+  "encryptionCounts": {
+    "CCMP": 30522,
+    "Other / Unknown": 1599,
+    "TKIP": 37,
+    "WEP": 6
+  },
+  "topChannels": [
+    {
+      "channel": 1,
+      "observations": 4198
+    },
+    {
+      "channel": 11,
+      "observations": 4015
+    },
+    {
+      "channel": 36,
+      "observations": 3311
+    },
+    {
+      "channel": 149,
+      "observations": 2820
+    },
+    {
+      "channel": 6,
+      "observations": 2672
+    },
+    {
+      "channel": 3,
+      "observations": 1506
+    },
+    {
+      "channel": 4,
+      "observations": 1384
+    },
+    {
+      "channel": 2,
+      "observations": 1306
+    },
+    {
+      "channel": 9,
+      "observations": 1279
+    },
+    {
+      "channel": 10,
+      "observations": 1267
+    },
+    {
+      "channel": 8,
+      "observations": 1249
+    },
+    {
+      "channel": 5,
+      "observations": 1243
+    },
+    {
+      "channel": 7,
+      "observations": 1143
+    },
+    {
+      "channel": 48,
+      "observations": 958
+    },
+    {
+      "channel": 40,
+      "observations": 805
+    },
+    {
+      "channel": 44,
+      "observations": 669
+    },
+    {
+      "channel": 157,
+      "observations": 387
+    },
+    {
+      "channel": 52,
+      "observations": 377
+    },
+    {
+      "channel": 153,
+      "observations": 333
+    },
+    {
+      "channel": 100,
+      "observations": 261
+    },
+    {
+      "channel": 13,
+      "observations": 243
+    },
+    {
+      "channel": 161,
+      "observations": 200
+    },
+    {
+      "channel": 60,
+      "observations": 89
+    },
+    {
+      "channel": 116,
+      "observations": 89
+    },
+    {
+      "channel": 12,
+      "observations": 75
+    },
+    {
+      "channel": 56,
+      "observations": 60
+    },
+    {
+      "channel": 132,
+      "observations": 40
+    },
+    {
+      "channel": 64,
+      "observations": 37
+    },
+    {
+      "channel": 108,
+      "observations": 36
+    },
+    {
+      "channel": 104,
+      "observations": 28
+    },
+    {
+      "channel": 124,
+      "observations": 23
+    },
+    {
+      "channel": 140,
+      "observations": 15
+    },
+    {
+      "channel": 120,
+      "observations": 14
+    },
+    {
+      "channel": 112,
+      "observations": 12
+    },
+    {
+      "channel": 165,
+      "observations": 8
+    },
+    {
+      "channel": 128,
+      "observations": 6
+    },
+    {
+      "channel": 136,
+      "observations": 6
+    }
+  ],
+  "signalHistogram": [
+    {
+      "label": "< -100 dBm",
+      "observations": 0
+    },
+    {
+      "label": "[-100,-90) dBm",
+      "observations": 1948
+    },
+    {
+      "label": "[-90,-80) dBm",
+      "observations": 7450
+    },
+    {
+      "label": "[-80,-70) dBm",
+      "observations": 11577
+    },
+    {
+      "label": "[-70,-60) dBm",
+      "observations": 8411
+    },
+    {
+      "label": "[-60,-50) dBm",
+      "observations": 2342
+    },
+    {
+      "label": "[-50,-40) dBm",
+      "observations": 407
+    },
+    {
+      "label": "[-40,-30) dBm",
+      "observations": 27
+    },
+    {
+      "label": "[-30,-20) dBm",
+      "observations": 2
+    },
+    {
+      "label": "[-20,-10) dBm",
+      "observations": 0
+    },
+    {
+      "label": "[-10,0) dBm",
+      "observations": 0
+    }
+  ],
+  "radioTypeCounts": {
+    "802.11a": 9,
+    "802.11ac": 11347,
+    "802.11ax": 4075,
+    "802.11b": 6,
+    "802.11be": 62,
+    "802.11g": 244,
+    "802.11n": 16421
+  }
+}

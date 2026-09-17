@@ -25,6 +25,50 @@ function accepted(row) {
   return result.observation;
 }
 
+function cellRows(row, col, ids, signal = -60, frequency = 2412) {
+  return ids.map((id) => fixture(row, col, id, signal, frequency));
+}
+
+function areaRows(anchorCol, prefix) {
+  const rows = [];
+  for (let row = 8000; row <= 8002; row += 1) {
+    for (let col = anchorCol; col <= anchorCol + 2; col += 1) {
+      const isLeftCell = row === 8000 && col === anchorCol;
+      const isRightCell = row === 8000 && col === anchorCol + 1;
+      const ids = Array.from({ length: 5 }, (_, index) => `${prefix}-${row}-${col}-${index}`);
+      if (prefix === 'area-a' && (isLeftCell || isRightCell)) ids[0] = `${prefix}-shared`;
+
+      if (prefix === 'area-a' && isLeftCell) {
+        rows.push(...cellRows(row, col, ids, -90));
+      } else if (prefix === 'area-a' && isRightCell) {
+        rows.push(...cellRows(row, col, [
+          ...ids,
+          `${prefix}-${row}-${col}-0`,
+          `${prefix}-${row}-${col}-1`,
+          `${prefix}-${row}-${col}-2`,
+          `${prefix}-${row}-${col}-3`,
+        ], -40));
+      } else {
+        rows.push(...cellRows(row, col, ids));
+      }
+    }
+  }
+  return rows;
+}
+
+function threeAreaRows() {
+  return [
+    ...areaRows(43000, 'area-a'),
+    ...areaRows(43003, 'area-b'),
+    ...areaRows(43006, 'area-c'),
+    ...cellRows(8000, 43009, ['suppressed-0', 'suppressed-1', 'suppressed-2', 'suppressed-3']),
+  ];
+}
+
+function publishedCell(row, col) {
+  return { row, col, cellId: `${row}_${col}` };
+}
+
 test('address is stable and uses an independent lattice origin', () => {
   const { center } = spatial.cellGeometry(8000, 43000);
 
@@ -199,4 +243,145 @@ test('empty aggregation has zero counts and no median', () => {
     encryptionCounts: {},
     topChannels: [],
   });
+});
+
+test('suppresses occupied cells with fewer than five unique identifiers', () => {
+  const data = spatial.buildSpatialData(threeAreaRows());
+
+  assert.equal(data.grid.cells.length, 27);
+  assert.equal(data.summary.publishedCellCount, 27);
+  assert.equal(data.summary.suppressedCellCount, 1);
+  assert.equal(data.summary.rejectedObservationCount, 0);
+  assert.equal(data.grid.cells.every((cell) => cell.uniqueNetworkCount >= 5), true);
+});
+
+test('selects equal-size non-overlapping A/B/C blocks deterministically', () => {
+  const publishedCells = [];
+  for (const anchorCol of [43000, 43003, 43006]) {
+    for (let row = 8000; row <= 8002; row += 1) {
+      for (let col = anchorCol; col <= anchorCol + 2; col += 1) {
+        publishedCells.push(publishedCell(row, col));
+      }
+    }
+  }
+
+  const first = spatial.selectPresetBlocks(publishedCells);
+  const reversed = spatial.selectPresetBlocks([...publishedCells].reverse());
+
+  assert.equal(first.blocks.length, 3);
+  assert.equal(first.selection.method, 'longitude-thirds');
+  assert.equal(first.selection.minimumPublishedCells, 5);
+  assert.equal(first.selection.fallbackUsed, false);
+  assert.deepEqual(first, reversed);
+
+  const allIds = first.blocks.flatMap((block) => {
+    assert.equal(block.cellIds.length, 9);
+    assert.equal(block.publishedCellCount, 9);
+    return block.cellIds;
+  });
+  assert.equal(new Set(allIds).size, 27);
+});
+
+test('uses documented longitude fallback for narrow coverage', () => {
+  const result = spatial.selectPresetBlocks([
+    publishedCell(8000, 43000),
+    publishedCell(8000, 43003),
+    publishedCell(8000, 43006),
+  ]);
+
+  assert.equal(result.selection.method, 'longitude-thirds');
+  assert.equal(result.selection.minimumPublishedCells, 1);
+  assert.equal(result.selection.fallbackUsed, true);
+  assert.match(result.selection.reason, /coverage/i);
+});
+
+test('fails explicitly when three disjoint blocks cannot be selected', () => {
+  assert.throws(
+    () => spatial.selectPresetBlocks([publishedCell(8000, 43000)]),
+    /three non-overlapping preset blocks/i,
+  );
+});
+
+test('preset and dataset counts deduplicate identifiers across their full raw scope', () => {
+  const raw = threeAreaRows();
+  const data = spatial.buildSpatialData(raw);
+  const areaA = data.presets.areas.find((area) => area.id === 'area-a');
+
+  assert.ok(areaA);
+  const areaACellUniqueSum = data.grid.cells
+    .filter((cell) => areaA.cellIds.includes(cell.cellId))
+    .reduce((total, cell) => total + cell.uniqueNetworkCount, 0);
+  assert.ok(areaA.uniqueNetworkCount < areaACellUniqueSum);
+
+  const publishedCellUniqueSum = data.grid.cells
+    .reduce((total, cell) => total + cell.uniqueNetworkCount, 0);
+  const occupiedCellGroups = new Map();
+  for (const row of raw) {
+    const normalized = spatial.normalizeRawRow(row);
+    if (!normalized.observation) continue;
+    const address = spatial.gridAddress(normalized.observation.latitude, normalized.observation.longitude);
+    const group = occupiedCellGroups.get(address.cellId) ?? [];
+    group.push(normalized.observation);
+    occupiedCellGroups.set(address.cellId, group);
+  }
+  const occupiedCellUniqueSum = [...occupiedCellGroups.values()]
+    .reduce((total, observations) => total + spatial.aggregateObservations(observations).uniqueNetworkCount, 0);
+  assert.equal(data.summary.uniqueNetworkCount, spatial.aggregateObservations(
+    [...occupiedCellGroups.values()].flat(),
+  ).uniqueNetworkCount);
+  assert.notEqual(data.summary.uniqueNetworkCount, publishedCellUniqueSum);
+  assert.ok(data.summary.uniqueNetworkCount < occupiedCellUniqueSum);
+});
+
+test('preset median uses raw observations rather than averaging cell medians', () => {
+  const raw = threeAreaRows();
+  const data = spatial.buildSpatialData(raw);
+  const areaA = data.presets.areas.find((area) => area.id === 'area-a');
+  assert.ok(areaA);
+
+  const observationsByCell = new Map();
+  for (const row of raw) {
+    const normalized = spatial.normalizeRawRow(row);
+    if (normalized.observation) {
+      const address = spatial.gridAddress(
+        normalized.observation.latitude,
+        normalized.observation.longitude,
+      );
+      const list = observationsByCell.get(address.cellId) ?? [];
+      list.push(normalized.observation);
+      observationsByCell.set(address.cellId, list);
+    }
+  }
+  const areaObservations = areaA.cellIds.flatMap((cellId) => observationsByCell.get(cellId) ?? []);
+  const expected = spatial.aggregateObservations(areaObservations).medianSignalDbm;
+  const cellMedianMean = areaA.cellIds
+    .map((cellId) => spatial.aggregateObservations(observationsByCell.get(cellId) ?? []).medianSignalDbm)
+    .filter((value) => value !== null)
+    .reduce((total, value, _, values) => total + value / values.length, 0);
+
+  assert.equal(areaA.medianSignalDbm, expected);
+  assert.notEqual(areaA.medianSignalDbm, cellMedianMean);
+});
+
+test('buildSpatialData is stable when raw input order is reversed', () => {
+  const raw = threeAreaRows();
+  assert.deepEqual(spatial.buildSpatialData(raw), spatial.buildSpatialData([...raw].reverse()));
+});
+
+test('CLI requires exactly one input and output argument', () => {
+  const { parseArguments } = require('../scripts/generate-demo-data.cjs');
+
+  assert.deepEqual(parseArguments(['--input', 'input.csv', '--out', 'public/data']), {
+    input: 'input.csv',
+    out: 'public/data',
+  });
+  for (const args of [
+    [],
+    ['--input', 'input.csv'],
+    ['--out', 'public/data'],
+    ['--input', 'input.csv', '--out', 'public/data', '--unknown'],
+    ['--input', 'one.csv', '--input', 'two.csv', '--out', 'public/data'],
+  ]) {
+    assert.throws(() => parseArguments(args), /input|out|unknown|duplicate/i);
+  }
 });

@@ -48,3 +48,37 @@ The implementation accepts only finite, strictly negative lowercase `signal`, no
 Remaining issue: none for Task 1.
 
 Next task: **Task 2 — Preset selection, generator, and aggregate outputs**. Do not start it in the Task 1 turn.
+
+## Task 2 — Preset selection, generator, and aggregate outputs
+
+- Status: complete
+- Branch: `laosence-phase2-spatial-intelligence`
+- Base SHA: `a64c5bf40c99983dc344525e603f1ba49bb51109`
+- Commit message: `feat: generate privacy-safe spatial demo data`
+- Scoped files: `scripts/lib/spatial.cjs`, `scripts/generate-demo-data.cjs`, `tests/spatial.test.cjs`, `public/data/grid-cells.json`, `public/data/preset-areas.json`, `public/data/dataset-summary.json`, `docs/phase2-progress.md`
+- Frontend: unchanged. Raw CSV files: retained; no raw data was removed or modified.
+- Generated summary: input `32165`, accepted `32164`, rejected `1` (`invalidCoordinates=0`, `invalidSignal=1`), unique identifiers `25291`, published cells `380`, suppressed occupied cells `39`.
+- Selection: `longitude-thirds`, minimum published coverage `5`, fallback `false`; candidate 3x3 blocks with coverage at least 5: `381`.
+- Presets: each has 3x3 dimensions and 9 geometric cell IDs; union contains `27` IDs and overlap count is `0`. Area A: published `5`, observations `46`, identifiers `46`, median `-79.5` dBm. Area B: published `8`, observations `391`, identifiers `391`, median `-77` dBm. Area C: published `8`, observations `447`, identifiers `394`, median `-69` dBm.
+- Determinism: forward and reversed input produced byte-identical serialized data (`366391` bytes each). The two generator runs produced matching hashes:
+  - `dataset-summary.json`: `5E4E7A1FCFAC59B46B0B19BF1200DFD2E12519DC440263481C7DCA2BA2D703D9`
+  - `grid-cells.json`: `3024F10AFF22216EA3512E9A8C429036D0F1658945D1BA6D2411C08527D78E2D`
+  - `preset-areas.json`: `F40151332A5CAF42D5E95609305AE8EB1F5364588CC5293DECF636F048F4F9A8`
+
+### Task 2 checks
+
+| Command | Exit | Result |
+|---|---:|---|
+| `node --test tests/spatial.test.cjs` | 0 | 16 tests passed; 0 failed, 0 skipped, 0 todo. |
+| generator to `public/data` | 0 | Generated all three aggregate documents. |
+| generator to ignored verification output | 0 | Regenerated all three documents. |
+| per-file SHA-256 comparison | 0 | All three public and verification hashes matched. |
+| reversed-input deterministic serialization check | 0 | Forward/reversed output was byte-identical. |
+| invalid CLI cases: missing, unknown, duplicate, same input/output path | 1 each | All rejected as required. |
+| `node --test tests/wifi.test.cjs` | 0 | 5 tests passed; 0 failed, 0 skipped, 0 todo. |
+| `npm.cmd run build` | 0 | Passed. Existing Vite warning remains: the main JS chunk is larger than 500 kB after minification. |
+| `npm.cmd run lint` | 0 | Passed with no lint output. |
+
+Remaining issue: none for Task 2.
+
+Next task: **Task 3 — Privacy gates and portable regression tests**. Do not start it in the Task 2 turn.
