@@ -11,13 +11,14 @@ const AGGREGATE_URLS = [
   '/data/dataset-summary.json',
 ];
 
-function loadTypescript(file) {
+function loadTypescript(file, overrides = {}) {
   const filename = path.resolve(__dirname, '..', file);
   const compiled = ts.transpileModule(fs.readFileSync(filename, 'utf8'), {
     compilerOptions: {
       module: ts.ModuleKind.CommonJS,
       target: ts.ScriptTarget.ES2022,
       esModuleInterop: true,
+      jsx: ts.JsxEmit.ReactJSX,
     },
   }).outputText;
   const loaded = new Module(filename, module);
@@ -25,8 +26,12 @@ function loadTypescript(file) {
   loaded.paths = Module._nodeModulePaths(path.dirname(filename));
   const originalRequire = loaded.require.bind(loaded);
   loaded.require = (specifier) => {
+    if (Object.hasOwn(overrides, specifier)) return overrides[specifier];
     if (specifier === '@/type/spatial') return loadTypescript('src/type/spatial.ts');
     if (specifier === '@/utils/spatialMetrics') return loadTypescript('src/utils/spatialMetrics.ts');
+    if (specifier === '@/utils/areaPresentation') return loadTypescript('src/utils/areaPresentation.ts');
+    if (specifier === '@/components/map/AreaIntelligencePanel') return loadTypescript('src/components/map/AreaIntelligencePanel.tsx');
+    if (specifier === '@/components/DatasetLimitations') return loadTypescript('src/components/DatasetLimitations.tsx');
     return originalRequire(specifier);
   };
   loaded._compile(compiled, filename);
@@ -72,6 +77,26 @@ function cellsWithUniqueCounts(values) {
     encryptionCounts: { CCMP: uniqueNetworkCount },
     topChannels: [],
   }));
+}
+
+function comparisonArea(name, overrides = {}) {
+  return {
+    id: name.toLowerCase().replace(' ', '-'),
+    name,
+    dimensions: { rows: 3, cols: 3 },
+    areaKm2Approx: 0.5625,
+    cellIds: [],
+    bounds: { south: 18, west: 102, north: 18.01, east: 102.01 },
+    publishedCellCount: 9,
+    observationCount: 100,
+    uniqueNetworkCount: 100,
+    medianSignalDbm: -70,
+    bandCounts: { '2.4GHz': 95, '5GHz': 5, otherUnknown: 0 },
+    authenticationCounts: { Open: 10, 'WPA2 Personal': 90 },
+    encryptionCounts: {},
+    topChannels: [],
+    ...overrides,
+  };
 }
 
 function documentForUrl(documents, url) {
@@ -137,6 +162,104 @@ test('area panel values use preset records directly and describe missing measure
   });
   assert.equal(zero.fiveShare, '0%');
   assert.equal(zero.securityMix[0].percentage, '0%');
+});
+
+test('identifier interpretation triggers at ten percent and handles zero counts factually', () => {
+  const { interpretAreas } = loadTypescript('src/utils/spatialMetrics.ts');
+  const a = comparisonArea('Area A');
+  const b = comparisonArea('Area B');
+  const statement = 'Area A shows a higher number of observed network identifiers within the same geographic survey area.';
+
+  assert.deepEqual(interpretAreas({ ...a, uniqueNetworkCount: 109 }, b), [
+    'The selected areas show broadly similar values across these surveyed wireless indicators.',
+  ]);
+  assert.deepEqual(interpretAreas({ ...a, uniqueNetworkCount: 110 }, b), [statement]);
+  assert.deepEqual(interpretAreas({ ...a, uniqueNetworkCount: 5 }, { ...b, uniqueNetworkCount: 0 }), [statement]);
+  assert.deepEqual(interpretAreas({ ...a, uniqueNetworkCount: 0 }, { ...b, uniqueNetworkCount: 0 }), [
+    'The selected areas show broadly similar values across these surveyed wireless indicators.',
+  ]);
+});
+
+test('band and Open shares trigger at five percentage points, excluding unknown denominators', () => {
+  const { interpretAreas } = loadTypescript('src/utils/spatialMetrics.ts');
+  const a = comparisonArea('Area A');
+  const b = comparisonArea('Area B');
+  const bandMessage = 'Area A shows a larger observed 5 GHz share.';
+  const openMessage = 'Area A has a higher share of advertised Open networks.';
+
+  const similar = 'The selected areas show broadly similar values across these surveyed wireless indicators.';
+  assert.deepEqual(interpretAreas({ ...a, bandCounts: { '2.4GHz': 91, '5GHz': 9, otherUnknown: 0 } }, b), [similar]);
+  assert.deepEqual(interpretAreas({ ...a, bandCounts: { '2.4GHz': 90, '5GHz': 10, otherUnknown: 0 } }, b), [bandMessage]);
+  assert.deepEqual(interpretAreas({ ...a, bandCounts: { '2.4GHz': 85, '5GHz': 15, otherUnknown: 0 } },
+    { ...b, bandCounts: { '2.4GHz': 90, '5GHz': 10, otherUnknown: 0 } }), [bandMessage]);
+  assert.deepEqual(interpretAreas({ ...a, authenticationCounts: { Open: 14 } }, b), [similar]);
+  assert.deepEqual(interpretAreas({ ...a, authenticationCounts: { Open: 15 } }, b), [openMessage]);
+  assert.deepEqual(interpretAreas({ ...a, bandCounts: { '2.4GHz': 0, '5GHz': 0, otherUnknown: 100 } }, b), [similar]);
+  assert.deepEqual(interpretAreas({ ...a, observationCount: 0, authenticationCounts: { Open: 0 } }, b), [similar]);
+});
+
+test('median boundary is five dB and missing measurements cannot create comparisons', () => {
+  const { interpretAreas } = loadTypescript('src/utils/spatialMetrics.ts');
+  const a = comparisonArea('Area A');
+  const b = comparisonArea('Area B');
+  const medianMessage = 'The median recorded signal differs by 5 dB between these areas.';
+
+  const similar = 'The selected areas show broadly similar values across these surveyed wireless indicators.';
+  assert.deepEqual(interpretAreas({ ...a, medianSignalDbm: -74.99 }, b), [similar]);
+  assert.deepEqual(interpretAreas({ ...a, medianSignalDbm: -75 }, b), [medianMessage]);
+  assert.deepEqual(interpretAreas({ ...a, medianSignalDbm: null }, b), [similar]);
+  const empty = comparisonArea('Area A', {
+    observationCount: 0,
+    uniqueNetworkCount: 0,
+    medianSignalDbm: null,
+    bandCounts: { '2.4GHz': 0, '5GHz': 0, otherUnknown: 0 },
+    authenticationCounts: {},
+  });
+  assert.deepEqual(interpretAreas(empty, { ...empty, id: 'area-b', name: 'Area B' }), [
+    'The selected areas show broadly similar values across these surveyed wireless indicators.',
+  ]);
+});
+
+test('interpretation keeps fixed priority and at most three factual statements', () => {
+  const { interpretAreas } = loadTypescript('src/utils/spatialMetrics.ts');
+  const a = comparisonArea('Area A', {
+    uniqueNetworkCount: 110,
+    bandCounts: { '2.4GHz': 90, '5GHz': 10, otherUnknown: 0 },
+    authenticationCounts: { Open: 15 },
+    medianSignalDbm: -75,
+  });
+  const b = comparisonArea('Area B');
+  const statements = interpretAreas(a, b);
+  assert.equal(statements.length, 3);
+  assert.match(statements[0], /identifiers/);
+  assert.match(statements[1], /5 GHz/);
+  assert.match(statements[2], /Open/);
+  assert.equal(statements.join(' ').includes('median'), false);
+  assert.doesNotMatch(statements.join(' '), /Winner|Best Location|score|footfall|sales/i);
+});
+
+test('ComparePage defaults to distinct A/B presets and labels disabled duplicate options', () => {
+  const React = require('react');
+  const { renderToStaticMarkup } = require('react-dom/server');
+  const { presets } = readPublicDocuments();
+  const { default: ComparePage } = loadTypescript('src/pages/ComparePage.tsx', {
+    '@/context/spatialContext': {
+      useSpatialData: () => ({ presetAreas: presets.areas, loading: false, error: null, retry: () => {} }),
+    },
+  });
+  const html = renderToStaticMarkup(React.createElement(ComparePage));
+  const left = html.match(/<select[^>]*id="compare-area-a"[^>]*>(.*?)<\/select>/s)?.[1];
+  const right = html.match(/<select[^>]*id="compare-area-b"[^>]*>(.*?)<\/select>/s)?.[1];
+  assert.ok(left && right);
+  assert.match(html, /Area A selection/);
+  assert.match(html, /Area B selection/);
+  assert.match(left, /value="area-a" selected=""/);
+  assert.match(right, /value="area-b" selected=""/);
+  assert.match(left, /value="area-b" disabled=""/);
+  assert.match(right, /value="area-a" disabled=""/);
+  assert.equal((html.match(/data-testid="area-intelligence"/g) ?? []).length, 2);
+  assert.match(html, /supplementary site-screening information/);
+  assert.doesNotMatch(html, /Winner|Best Location|business score/i);
 });
 
 test('maps spatial metrics and keeps unknown values explicit', () => {

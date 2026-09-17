@@ -1,4 +1,4 @@
-import type { AggregateMetrics, BandCounts, GridCell, SpatialMetric } from '@/type/spatial';
+import type { AggregateMetrics, BandCounts, GridCell, PresetArea, SpatialMetric } from '@/type/spatial';
 
 export interface IntensityBin {
   upperInclusive: number | null;
@@ -34,6 +34,48 @@ export function metricValue(metrics: AggregateMetrics, metric: SpatialMetric): n
   if (metric === 'infrastructure') return metrics.uniqueNetworkCount;
   if (metric === 'medianSignal') return metrics.medianSignalDbm;
   return knownBandShares(metrics.bandCounts).five;
+}
+
+function openShare(area: PresetArea): number | null {
+  return area.observationCount === 0
+    ? null
+    : (area.authenticationCounts.Open ?? 0) / area.observationCount;
+}
+
+export function interpretAreas(a: PresetArea, b: PresetArea): string[] {
+  const statements: string[] = [];
+  const smallerCount = Math.min(a.uniqueNetworkCount, b.uniqueNetworkCount);
+  const countDifference = Math.abs(a.uniqueNetworkCount - b.uniqueNetworkCount);
+  if (countDifference > 0 && (smallerCount === 0 || countDifference / smallerCount >= 0.10)) {
+    const higher = a.uniqueNetworkCount > b.uniqueNetworkCount ? a : b;
+    statements.push(`${higher.name} shows a higher number of observed network identifiers within the same geographic survey area.`);
+  }
+
+  const aFive = knownBandShares(a.bandCounts).five;
+  const bFive = knownBandShares(b.bandCounts).five;
+  if (aFive !== null && bFive !== null && Math.abs(aFive - bFive) + 1e-12 >= 0.05) {
+    const higher = aFive > bFive ? a : b;
+    statements.push(`${higher.name} shows a larger observed 5 GHz share.`);
+  }
+
+  const aOpen = openShare(a);
+  const bOpen = openShare(b);
+  if (aOpen !== null && bOpen !== null && Math.abs(aOpen - bOpen) + 1e-12 >= 0.05) {
+    const higher = aOpen > bOpen ? a : b;
+    statements.push(`${higher.name} has a higher share of advertised Open networks.`);
+  }
+
+  if (a.medianSignalDbm !== null && b.medianSignalDbm !== null
+      && Number.isFinite(a.medianSignalDbm) && Number.isFinite(b.medianSignalDbm)) {
+    const difference = Math.abs(a.medianSignalDbm - b.medianSignalDbm);
+    if (difference >= 5) {
+      statements.push(`The median recorded signal differs by ${difference} dB between these areas.`);
+    }
+  }
+
+  return statements.length === 0
+    ? ['The selected areas show broadly similar values across these surveyed wireless indicators.']
+    : statements.slice(0, 3);
 }
 
 function formatValue(value: number): string {

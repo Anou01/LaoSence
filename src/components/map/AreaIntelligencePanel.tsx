@@ -6,9 +6,10 @@ interface AreaIntelligencePanelProps {
   title: string;
   metrics: AggregateMetrics;
   area?: PresetArea;
+  showCompareLink?: boolean;
 }
 
-export function AreaIntelligencePanel({ title, metrics, area }: AreaIntelligencePanelProps) {
+export function AreaIntelligencePanel({ title, metrics, area, showCompareLink = true }: AreaIntelligencePanelProps) {
   const values = areaPresentation(metrics);
 
   return (
@@ -63,7 +64,7 @@ export function AreaIntelligencePanel({ title, metrics, area }: AreaIntelligence
           </ol>
         )}
       </div>
-      {area && <Link className="inline-block font-semibold text-teal-800 underline underline-offset-2 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-teal-800" to="/compare">Compare areas</Link>}
+      {area && showCompareLink && <Link className="inline-block font-semibold text-teal-800 underline underline-offset-2 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-teal-800" to="/compare">Compare areas</Link>}
     </section>
   );
 }

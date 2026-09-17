@@ -210,3 +210,30 @@ Next task: **Task 6**. Do not start it in the Task 5 fix turn.
 Remaining issue: the Compare link points to `/compare`, which is scheduled for Task 7/8 and is not a mounted route yet. Task 10 still owns full error-state and four-route browser acceptance.
 
 Next task: **Task 7**. Do not start it in the Task 6 turn.
+
+## Task 7 - Factual comparison page
+
+- Status: complete for Task 7; page is intentionally not connected to a route until Task 8.
+- Branch: `laosence-phase2-spatial-intelligence`
+- Base SHA: `fb4ac30d3b14b5d217cf9e05a4573d4a79c993c1`
+- Commit message: `feat: add factual area comparison`
+- Scoped files: `src/pages/ComparePage.tsx`, `src/utils/spatialMetrics.ts`, `src/components/map/AreaIntelligencePanel.tsx`, `tests/spatial-ui.test.cjs`, `docs/phase2-progress.md`.
+- Logic: `interpretAreas(a,b)` consumes preset aggregates only, in identifier / 5 GHz / advertised Open / median order, returns at most three factual statements, and uses the plan's 10%, 5 percentage-point, and 5 dB thresholds. A zero-versus-positive identifier count is described without a percent. Unknown band and zero-observation denominators produce no share comparison; null or non-finite medians produce no signal comparison. Equal/below-threshold values produce the plan's similarity sentence.
+- Page: defaults to Area A vs Area B; native labeled selectors disable the other side's option and handlers guard against identical IDs. Both sides reuse `AreaIntelligencePanel` and its preset formatting, without its Compare link. Selector changes update local state and do not fetch. The required site-screening product copy, exact supplementary-indicator limitation, and `DatasetLimitations` are present. No winner, best-location recommendation, or business score is shown.
+- Browser evidence: mounted `ComparePage` in an ignored, temporary Vite test harness without editing routes. Chrome/Playwright showed A/B defaults, changes to C/B and C/A, disabled duplicate choices, two metric panels, no page errors, and exactly three aggregate requests before and after selector changes. Desktop and 375px screenshots are ignored at `artifacts/phase2/task7-compare-isolated.png` and `task7-compare-narrow.png`. This is isolated component verification, not a production `/compare` route check.
+- Root provider and NavBar remain unchanged; `/compare` route is not mounted. Raw CSV retained. No push or Task 8 work.
+
+### Task 7 checks
+
+| Command | Exit | Result |
+|---|---:|---|
+| `node --test tests/spatial-ui.test.cjs` | 0 | 17 passed; 0 failed, 0 skipped, 0 todo. New regressions cover thresholds below/at boundaries, floating-point share tolerance, null/zero denominators, equal metrics, statement priority/cap, A/B defaults, and duplicate-option disabled state. |
+| `npm.cmd test` | 0 | 47 passed; 0 failed, 0 skipped, 0 todo. |
+| `npm.cmd run build` | 0 | Passed. Existing warning remains: main JS chunk is larger than 500 kB after minification. |
+| `npm.cmd run lint` | 0 | Passed with no lint output. |
+| Isolated Vite browser check | 0 | A/B to C/B to C/A selection passed; three aggregate requests throughout; zero page errors; desktop and 375px inspected. |
+| `git diff --check` | 0 | Passed. |
+
+Remaining issue: Task 8 must mount `/compare`, link NavBar, and replace the root provider before production-route verification. Task 10 still owns full four-route and failure-state browser acceptance.
+
+Next task: **Task 8**. Do not start it in the Task 7 turn.
