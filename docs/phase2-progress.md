@@ -292,3 +292,31 @@ Next task: **Task 9**. Do not start it in the Task 8 turn.
 | `git diff --check` | 0 | Passed. |
 
 Next task: **Task 10**. Do not start it in the Task 9 turn.
+
+## Task 10 - Production browser, error-state, and performance verification
+
+- Status: complete for Task 10 browser acceptance on the local Chrome/production-preview environment. No production source changes were needed; only this checkpoint is committed. Full fresh-install/final privacy audit remains Task 11.
+- Branch: `laosence-phase2-spatial-intelligence`
+- Base SHA: `df09cb47a9908f9dbc08e3468b0b96ff9fedde79`
+- Browser evidence: ignored `artifacts/phase2/task10_browser_check.py` ran against a freshly built Vite production preview. Request, page-error, and console-error listeners were attached before every direct navigation. Direct `/`, `/map`, `/analysis`, and `/compare` each requested exactly `/data/grid-cells.json`, `/data/preset-areas.json`, and `/data/dataset-summary.json` as wireless data; no `/CSV_FILE/`, wireless `.csv`, or Chanthabuly raw request and no page errors. Client navigation among the four routes, preset/cell selection, and Compare selector changes added zero wireless-data requests.
+- Map: 380 SVG grid rectangles and zero individual marker icons. Clicking A, B, and C showed exact preset JSON identifiers, Observations, median, known-band shares, unknown-band count, authentication counts, channel values, and published coverage; each complete outline fit visibly within the map and occupied over half its viewport dimensions. The 27 preset cell IDs were distinct, matching 3x3 equal blocks and prior nonoverlap tests. Clicking visible cell `8013_43458` showed its own JSON metrics, removed the preset outline, and cleared pressed preset buttons. A/B/C and cell timings below are local browser-action-to-panel timings, not a universal SLA.
+- Compare: A/B default panels matched preset JSON. C/B and C/A changes updated both panels and interpretation, disabled duplicate options, kept one to three factual statements, and did not fetch. No Winner/Best Location or positive sales-prediction claim appeared.
+- Analytics: 32,164 Observations and 25,291 Observed network identifiers, source/period and 32,164/32,165 accepted context matched summary JSON. All six chart titles rendered; hovering a nonzero row/sector in each showed an Observations tooltip. Dataset limitations were visible. Visible text on all four direct routes contained no MAC-like value, SSID/BSSID field label, or exact per-cell center coordinates.
+- Failure interception: a grid HTTP 500, malformed preset JSON, and empty grid inconsistent with preset/summary each produced a truthful loading alert, no published rectangles, zero page errors, and recovered to 380 cells via Retry after normal responses were restored. The empty-grid document was rejected rather than manufacturing compatible presets. Separate valid intercepted preset records showed `No recorded data` for null median, `Unknown` known-band shares and 46 unknown-band Observations, and `No recorded channels` for empty channels, without page errors. Interceptions changed no committed JSON.
+- Screenshots, inspected locally and ignored from Git: `artifacts/phase2/grid-map.png`, `cell-area-intelligence.png`, `preset-area.png`, `compare-area-a-vs-b.png`. The first grid screenshot was captured before/without successful external OpenStreetMap tiles, so it shows a gray basemap behind the intact grid; the later cell screenshot shows tiles. Tile availability is external to aggregate fetch/validation. A nonbreaking 404 console message on `/` remains consistent with the previously identified missing favicon.
+- Local performance sample: three JSON source sizes were 705,935, 8,303, and 4,026 bytes (718,264 total). Resource timing for the aggregate requests was 10.5, 4.4, and 4.2 ms; the grid was rendered 86.2 ms after the last aggregate response ended. Full navigation-to-grid-ready was 3,398.3 ms in this sample, which includes JS startup and environment scheduling; the 86.2 ms interval includes parse, validation, and rendering, so it is not claimed as pure parse time. Cross-origin tile entries took about 74 ms in this sample and are not included in the aggregate timing. A/B/C panel updates took 67.3/45.9/41.9 ms, selected cell 25.9 ms, and Compare left/right changes 11.5/6.7 ms. These measured interactions were below the plan's approximate 200 ms target on this machine.
+- Static implementation review: preprocessing groups observations in one pass, aggregates per-cell observations and raw signals, and checks each candidate preset block with nine Set lookups rather than rescanning raw rows per candidate. UI memoizes cell/area indexes, intensity scale, and summary chart adapters. No renderer or bundle-warning refactor was justified by measured interaction timing.
+- The first tooltip script attempt missed a donut sector because its bounding-box center is an empty hole; a later diagnostic confirmed the actual colored sector displays `Observations : 30522`. The browser harness was adjusted to hover an SVG fill point after chart animation. No application bug or source fix was made.
+- No raw CSV was restored, no push was made, and Task 11 has not been started.
+
+### Task 10 checks
+
+| Command | Exit | Result |
+|---|---:|---|
+| `npm.cmd test` | 0 | 49 passed; 0 failed, 0 skipped, 0 todo. |
+| `npm.cmd run build` | 0 | Passed; existing >500 kB main-JS chunk warning remains. |
+| `npm.cmd run lint` | 0 | Passed. |
+| `task10_browser_check.py` via production-preview server helper | 0 | Four direct routes/navigation, map and Compare interactions, six tooltip hovers, failure/Retry and missing-data cases, screenshots, and performance measurements passed. |
+| `git diff --check` | 0 | Passed. |
+
+Next task: **Task 11**. Do not start it in the Task 10 turn.
