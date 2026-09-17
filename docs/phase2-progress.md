@@ -264,3 +264,31 @@ Next task: **Task 8**. Do not start it in the Task 7 turn.
 | `git diff --check` | 0 | Passed. |
 
 Next task: **Task 9**. Do not start it in the Task 8 turn.
+
+## Task 9 - Remove raw wireless files from the current tree
+
+- Status: complete for Task 9; current source and production build no longer contain raw wireless CSV. Historical Git exposure remains.
+- Branch: `laosence-phase2-spatial-intelligence`
+- Base SHA: `8c0b21d90fa2c6cf67f37bdb24e0106498e0349b`
+- Commit message: `chore: remove raw wireless datasets from current tree`
+- Scoped changes: `git rm` of exactly the five files under `public/CSV_FILE/` and two under `src/assets/CSV_FILE/` listed in the Task 9 plan; new `docs/demo-data.md`; this checkpoint. Game JSON and other assets were retained.
+- Removal gate: verified repository root and the exact seven tracked paths. The ignored private Chanthabuly input exists and its SHA-256 equals the then-tracked public original: `CFB0F722820DF7D3B7CA074ADA198C6D5D693782DFABABB91D4298941FAC3E36`. `git check-ignore -v` identifies `/private-data/` in `.gitignore`. The private copy was not deleted or staged.
+- Aggregate gate: `validatePublicOutputs()` passed on all three checked-in JSON documents before removal: 380 published cells, three presets, 32,164 accepted Observations. No aggregate JSON was changed.
+- Inventory: after removal, recursive `public/` and `src/assets/` inspection found no remaining `.csv` or matching raw wireless filename. The remaining public JSON comprises the three validated aggregates and the unrelated game `question.json`/`result.json`; game files were preserved. Rebuilt `dist/` has no `CSV_FILE` directory, CSV files, or matching raw filenames.
+- Regeneration guide: `docs/demo-data.md` documents authorized ignored input, exact CLI/test/build commands, accepted-signal rejection, 250 m lattice approximation, coverage-biased preset selection, canonical categories, suppression and residual differencing risks, historical Git exposure, and historical/non-citywide/non-business limitations.
+- Production preview after deletion: Chrome direct loads of `/`, `/map`, `/analysis`, `/compare` and client navigation/Compare and Map selection checks passed. Request listeners were installed before navigation. Each direct load requested only the three aggregate wireless JSON URLs; no raw CSV request or page error occurred. Navigation and selections added no wireless-data request. One home-load console captured a nonbreaking `favicon.ico` 404 and transient OpenStreetMap tile `ERR_NETWORK_CHANGED` errors.
+- All seven old raw URLs were probed against production preview. Each returned HTTP 200 with `text/html` SPA fallback, **not CSV data**. A 200 status alone would therefore be misleading; the response body was HTML.
+- Browser scripts and screenshots remain ignored under `artifacts/phase2/`. No private copy deletion, history rewrite, push, or Task 10 work was done.
+
+### Task 9 checks
+
+| Command | Exit | Result |
+|---|---:|---|
+| `npm.cmd test` | 0 | 49 passed; 0 failed, 0 skipped, 0 todo. |
+| `npm.cmd run build` | 0 | Passed; existing main-JS chunk warning above 500 kB remains. |
+| `npm.cmd run lint` | 0 | Passed. |
+| Recursive source/build raw-file inventory | 0 | No raw wireless CSV remains in `public/`, `src/assets/`, or rebuilt `dist/`. |
+| Production preview browser checks | 0 | Four direct routes, client navigation/selections, no raw requests or page errors; all seven old raw URLs returned SPA HTML rather than CSV. |
+| `git diff --check` | 0 | Passed. |
+
+Next task: **Task 10**. Do not start it in the Task 9 turn.
