@@ -81,4 +81,29 @@ Next task: **Task 2 — Preset selection, generator, and aggregate outputs**. Do
 
 Remaining issue: none for Task 2.
 
-Next task: **Task 3 — Privacy gates and portable regression tests**. Do not start it in the Task 2 turn.
+## Task 3 - Privacy gates and portable regression tests
+
+- Status: complete
+- Branch: `laosence-phase2-spatial-intelligence`
+- Base SHA: `4e8a0d9ada6059b1f322b0f5f9cfdb4a3398c4ce`
+- Commit message: `test: enforce spatial privacy and portable WiFi regressions`
+- Scoped files: `scripts/lib/spatial.cjs`, `tests/spatial.test.cjs`, `tests/wifi.test.cjs`, `package.json`, `docs/phase2-progress.md`
+- Frontend: unchanged. Raw CSV files: retained; no raw data was removed or modified.
+- Validator gates: preset cell overlap, count partitions, MAC patterns in keys and values, category allowlists, unique-count bounds, negative medians, histogram/radio partitions, and fixed-lattice geometry tolerance (`1e-10`).
+- Public JSON: checked-in `public/data` documents validated successfully. The current output has `380` published cells and `39` suppressed cells; selection is `longitude-thirds`, minimum coverage `5`, with `fallbackUsed: false`.
+- Portable Wi-Fi regression: the primary dataset path assertion now uses a three-row synthetic CSV fixture, including case-insensitive BSSID deduplication and one null signal, without reading the raw CSV.
+
+### Task 3 checks
+
+| Command | Exit | Result |
+|---|---:|---|
+| `node --test tests/spatial.test.cjs` | 0 | 25 tests passed; 0 failed, 0 skipped, 0 todo. Includes synthetic adversarial validator fixtures and checked-in public JSON validation. |
+| `node --test tests/wifi.test.cjs` | 0 | 5 tests passed; 0 failed, 0 skipped, 0 todo. |
+| `npm.cmd test` | 0 | 30 tests passed; 0 failed, 0 skipped, 0 todo. |
+| `npm.cmd run build` | 0 | Passed. Existing Vite warning remains: the main JS chunk is larger than 500 kB after minification. |
+| `npm.cmd run lint` | 0 | Passed with no lint output. |
+| Direct `validatePublicOutputs()` check on all three checked-in JSON documents | 0 | Passed; `380` published cells, `39` suppressed cells, no selection fallback. |
+
+Remaining issue: none for Task 3.
+
+Next task: **Task 4**. Do not start it in the Task 3 turn.

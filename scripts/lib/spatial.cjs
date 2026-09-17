@@ -36,6 +36,23 @@ const RADIO_LABELS = new Set([
   '802.11ax',
   '802.11be',
 ]);
+const PUBLIC_AUTHENTICATION_LABELS = new Set([
+  ...AUTHENTICATION_LABELS,
+  'Other / Unknown',
+]);
+const PUBLIC_ENCRYPTION_LABELS = new Set([
+  ...ENCRYPTION_LABELS,
+  'Other / Unknown',
+]);
+const PUBLIC_RADIO_LABELS = new Set([
+  ...RADIO_LABELS,
+  'Other / Unknown',
+]);
+const MAC_PATTERNS = [
+  /\b(?:[0-9a-f]{2}:){5}[0-9a-f]{2}\b/i,
+  /\b(?:[0-9a-f]{2}-){5}[0-9a-f]{2}\b/i,
+  /\b[0-9a-f]{12}\b/i,
+];
 
 function numberValue(value) {
   if (value === null || value === undefined) return null;
@@ -598,15 +615,29 @@ function assertNonNegativeInteger(value, label) {
   }
 }
 
-function validateCountRecord(value, label) {
+function validateCountRecord(value, label, allowedLabels = null) {
   if (!value || typeof value !== 'object' || Array.isArray(value)) {
     throw new Error(`${label} must be a count record`);
   }
   for (const [key, count] of Object.entries(value)) {
-    if (!key || /ssid|bssid|mac|hash|raw|timestamp|manufacturer/i.test(key)) {
+    if (!key || MAC_PATTERNS.some((pattern) => pattern.test(key)) ||
+        /ssid|bssid|mac|hash|raw|timestamp|manufacturer|identifier/i.test(key)) {
       throw new Error(`${label} contains a forbidden key`);
     }
+    if (allowedLabels && !allowedLabels.has(key)) {
+      throw new Error(`${label} contains a category outside the allowlist`);
+    }
     assertNonNegativeInteger(count, `${label}.${key}`);
+  }
+}
+
+function countTotal(value) {
+  return Object.values(value).reduce((total, count) => total + count, 0);
+}
+
+function assertClose(actual, expected, label) {
+  if (Math.abs(actual - expected) > 1e-10) {
+    throw new Error(`${label} is not on the fixed lattice`);
   }
 }
 
@@ -621,11 +652,26 @@ function validateBounds(value, label) {
 function validateAggregateMetrics(value, label) {
   assertNonNegativeInteger(value.observationCount, `${label}.observationCount`);
   assertNonNegativeInteger(value.uniqueNetworkCount, `${label}.uniqueNetworkCount`);
-  if (value.medianSignalDbm !== null) assertFiniteNumber(value.medianSignalDbm, `${label}.medianSignalDbm`);
+  if (value.uniqueNetworkCount > value.observationCount) {
+    throw new Error(`${label}.uniqueNetworkCount cannot exceed observationCount`);
+  }
+  if (value.medianSignalDbm !== null) {
+    assertFiniteNumber(value.medianSignalDbm, `${label}.medianSignalDbm`);
+    if (value.medianSignalDbm >= 0) throw new Error(`${label}.medianSignalDbm must be negative`);
+  }
   assertExactKeys(value.bandCounts, BAND_KEYS, `${label}.bandCounts`);
   for (const key of BAND_KEYS) assertNonNegativeInteger(value.bandCounts[key], `${label}.bandCounts.${key}`);
-  validateCountRecord(value.authenticationCounts, `${label}.authenticationCounts`);
-  validateCountRecord(value.encryptionCounts, `${label}.encryptionCounts`);
+  if (countTotal(value.bandCounts) !== value.observationCount) {
+    throw new Error(`${label}.bandCounts must partition observationCount`);
+  }
+  validateCountRecord(value.authenticationCounts, `${label}.authenticationCounts`, PUBLIC_AUTHENTICATION_LABELS);
+  if (countTotal(value.authenticationCounts) !== value.observationCount) {
+    throw new Error(`${label}.authenticationCounts must partition observationCount`);
+  }
+  validateCountRecord(value.encryptionCounts, `${label}.encryptionCounts`, PUBLIC_ENCRYPTION_LABELS);
+  if (countTotal(value.encryptionCounts) !== value.observationCount) {
+    throw new Error(`${label}.encryptionCounts must partition observationCount`);
+  }
   if (!Array.isArray(value.topChannels)) throw new Error(`${label}.topChannels must be an array`);
   for (const [index, channel] of value.topChannels.entries()) {
     assertExactKeys(channel, ['channel', 'observations'], `${label}.topChannels[${index}]`);
@@ -633,19 +679,23 @@ function validateAggregateMetrics(value, label) {
       throw new Error(`${label}.topChannels[${index}].channel must be positive`);
     }
     assertNonNegativeInteger(channel.observations, `${label}.topChannels[${index}].observations`);
+    if (channel.observations > value.observationCount) {
+      throw new Error(`${label}.topChannels observations cannot exceed observationCount`);
+    }
   }
 }
 
 function scanForPrivacyViolations(value) {
   if (typeof value === 'string') {
-    if (/\b[0-9a-f]{2}([:-][0-9a-f]{2}){5}\b/i.test(value) || /\b[0-9a-f]{12}\b/i.test(value)) {
+    if (MAC_PATTERNS.some((pattern) => pattern.test(value))) {
       throw new Error('Public output contains a MAC-like identifier');
     }
     return;
   }
   if (!value || typeof value !== 'object') return;
   for (const [key, child] of Object.entries(value)) {
-    if (/ssid|bssid|mac|hash|rawrow|timestamp|observedat|manufacturer/i.test(key)) {
+    if (MAC_PATTERNS.some((pattern) => pattern.test(key)) ||
+        /ssid|bssid|mac|hash|rawrow|timestamp|observedat|manufacturer|identifier/i.test(key)) {
       throw new Error('Public output contains a forbidden identifier field');
     }
     scanForPrivacyViolations(child);
@@ -682,10 +732,11 @@ function validatePublicOutputs(outputs) {
     assertFiniteNumber(cell.center.lat, `grid.cells[${index}].center.lat`);
     assertFiniteNumber(cell.center.lng, `grid.cells[${index}].center.lng`);
     const expectedGeometry = cellGeometry(cell.row, cell.col);
-    if (JSON.stringify(cell.bounds) !== JSON.stringify(expectedGeometry.bounds) ||
-        JSON.stringify(cell.center) !== JSON.stringify(expectedGeometry.center)) {
-      throw new Error('grid cell geometry is not on the fixed lattice');
+    for (const key of ['south', 'west', 'north', 'east']) {
+      assertClose(cell.bounds[key], expectedGeometry.bounds[key], `grid.cells[${index}].bounds.${key}`);
     }
+    assertClose(cell.center.lat, expectedGeometry.center.lat, `grid.cells[${index}].center.lat`);
+    assertClose(cell.center.lng, expectedGeometry.center.lng, `grid.cells[${index}].center.lng`);
     validateAggregateMetrics(cell, `grid.cells[${index}]`);
     if (cell.uniqueNetworkCount < MIN_UNIQUE_NETWORKS_PER_CELL) {
       throw new Error('grid cell does not meet the suppression threshold');
@@ -712,6 +763,7 @@ function validatePublicOutputs(outputs) {
     throw new Error('exactly three preset areas are required');
   }
   const expectedAreaIds = ['area-a', 'area-b', 'area-c'];
+  const presetCellIds = new Set();
   for (const [index, area] of presets.areas.entries()) {
     assertExactKeys(area, [...AGGREGATE_KEYS, 'id', 'name', 'dimensions', 'areaKm2Approx', 'cellIds', 'bounds', 'publishedCellCount'], `presets.areas[${index}]`);
     if (area.id !== expectedAreaIds[index] || area.name !== `Area ${String.fromCharCode(65 + index)}`) {
@@ -724,6 +776,10 @@ function validatePublicOutputs(outputs) {
     if (!Array.isArray(area.cellIds) || area.cellIds.length !== 9 || new Set(area.cellIds).size !== 9) {
       throw new Error('preset areas must contain nine unique cells');
     }
+    for (const cellId of area.cellIds) {
+      if (presetCellIds.has(cellId)) throw new Error('preset areas must not overlap');
+      presetCellIds.add(cellId);
+    }
     const areaCoordinates = area.cellIds.map((cellId) => parseCellCoordinates({ cellId }));
     const minAreaRow = Math.min(...areaCoordinates.map(({ row }) => row));
     const minAreaCol = Math.min(...areaCoordinates.map(({ col }) => col));
@@ -733,7 +789,9 @@ function validatePublicOutputs(outputs) {
     }
     validateBounds(area.bounds, `presets.areas[${index}].bounds`);
     const expectedBounds = buildAreaBounds(minAreaRow, minAreaCol);
-    if (JSON.stringify(area.bounds) !== JSON.stringify(expectedBounds)) throw new Error('preset bounds are invalid');
+    for (const key of ['south', 'west', 'north', 'east']) {
+      assertClose(area.bounds[key], expectedBounds[key], `presets.areas[${index}].bounds.${key}`);
+    }
     assertNonNegativeInteger(area.publishedCellCount, `presets.areas[${index}].publishedCellCount`);
     if (area.publishedCellCount > 9 || area.publishedCellCount < selection.minimumPublishedCells) {
       throw new Error('preset published coverage is invalid');
@@ -780,7 +838,14 @@ function validatePublicOutputs(outputs) {
     if (bin.label !== SIGNAL_HISTOGRAM_BINS[index].label) throw new Error('summary signal histogram labels are invalid');
     assertNonNegativeInteger(bin.observations, `summary.signalHistogram[${index}].observations`);
   }
-  validateCountRecord(summary.radioTypeCounts, 'summary.radioTypeCounts');
+  validateCountRecord(summary.radioTypeCounts, 'summary.radioTypeCounts', PUBLIC_RADIO_LABELS);
+  const histogramCount = summary.signalHistogram.reduce((total, bin) => total + bin.observations, 0);
+  if (histogramCount !== summary.observationCount) {
+    throw new Error('summary signal histogram must partition observationCount');
+  }
+  if (countTotal(summary.radioTypeCounts) !== summary.observationCount) {
+    throw new Error('summary radioTypeCounts must partition observationCount');
+  }
   validateAggregateMetrics(summary, 'summary');
   scanForPrivacyViolations(outputs);
 }

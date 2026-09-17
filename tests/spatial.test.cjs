@@ -1,5 +1,7 @@
 const { test } = require('node:test');
 const assert = require('node:assert/strict');
+const fs = require('node:fs');
+const path = require('node:path');
 
 const spatial = require('../scripts/lib/spatial.cjs');
 
@@ -67,6 +69,22 @@ function threeAreaRows() {
 
 function publishedCell(row, col) {
   return { row, col, cellId: `${row}_${col}` };
+}
+
+function syntheticOutput() {
+  return spatial.buildSpatialData(threeAreaRows());
+}
+
+function checkedInPublicOutputs() {
+  const read = (filename) => JSON.parse(fs.readFileSync(
+    path.resolve(__dirname, '../public/data', filename),
+    'utf8',
+  ));
+  return {
+    grid: read('grid-cells.json'),
+    presets: read('preset-areas.json'),
+    summary: read('dataset-summary.json'),
+  };
 }
 
 test('address is stable and uses an independent lattice origin', () => {
@@ -366,6 +384,137 @@ test('preset median uses raw observations rather than averaging cell medians', (
 test('buildSpatialData is stable when raw input order is reversed', () => {
   const raw = threeAreaRows();
   assert.deepEqual(spatial.buildSpatialData(raw), spatial.buildSpatialData([...raw].reverse()));
+});
+
+test('rejects presets that reuse a cell from another preset', () => {
+  const output = syntheticOutput();
+  output.presets.areas[1].cellIds = [...output.presets.areas[0].cellIds];
+  output.presets.areas[1].bounds = { ...output.presets.areas[0].bounds };
+  output.presets.areas[1].publishedCellCount = output.presets.areas[0].publishedCellCount;
+
+  assert.throws(() => spatial.validatePublicOutputs(output), /overlap/i);
+});
+
+test('rejects band, authentication, and encryption partitions that do not equal observations', () => {
+  const mutations = [
+    (output) => { output.summary.bandCounts['2.4GHz'] += 1; },
+    (output) => { output.summary.authenticationCounts['WPA2 Personal'] += 1; },
+    (output) => { output.summary.encryptionCounts.CCMP += 1; },
+  ];
+
+  for (const mutate of mutations) {
+    const output = syntheticOutput();
+    mutate(output);
+    assert.throws(
+      () => spatial.validatePublicOutputs(output),
+      /count|observation|partition/i,
+    );
+  }
+});
+
+test('rejects MAC patterns in object keys and string values', () => {
+  const keyOutput = syntheticOutput();
+  const count = keyOutput.summary.authenticationCounts['WPA2 Personal'];
+  delete keyOutput.summary.authenticationCounts['WPA2 Personal'];
+  keyOutput.summary.authenticationCounts['aa:bb:cc:dd:ee:ff'] = count;
+  assert.throws(
+    () => spatial.validatePublicOutputs(keyOutput),
+    /MAC|identifier|forbidden|category/i,
+  );
+
+  const valueOutput = syntheticOutput();
+  valueOutput.summary.sourceLabel = 'survey aa-bb-cc-dd-ee-ff';
+  assert.throws(
+    () => spatial.validatePublicOutputs(valueOutput),
+    /MAC|identifier|forbidden/i,
+  );
+});
+
+test('rejects category names outside the public allowlists', () => {
+  const mutations = [
+    (output) => {
+      const count = output.summary.authenticationCounts['WPA2 Personal'];
+      delete output.summary.authenticationCounts['WPA2 Personal'];
+      output.summary.authenticationCounts['Corporate WiFi'] = count;
+    },
+    (output) => {
+      const count = output.summary.encryptionCounts.CCMP;
+      delete output.summary.encryptionCounts.CCMP;
+      output.summary.encryptionCounts['Custom Cipher'] = count;
+    },
+    (output) => {
+      const count = output.summary.radioTypeCounts['802.11n'];
+      delete output.summary.radioTypeCounts['802.11n'];
+      output.summary.radioTypeCounts['802.11zz'] = count;
+    },
+  ];
+
+  for (const mutate of mutations) {
+    const output = syntheticOutput();
+    mutate(output);
+    assert.throws(() => spatial.validatePublicOutputs(output), /allowlist|category/i);
+  }
+});
+
+test('rejects unique counts above observations and non-negative medians', () => {
+  const tooManyUnique = syntheticOutput();
+  tooManyUnique.summary.uniqueNetworkCount = tooManyUnique.summary.observationCount + 1;
+  assert.throws(() => spatial.validatePublicOutputs(tooManyUnique), /uniqueNetworkCount|observation/i);
+
+  const nonNegativeMedian = syntheticOutput();
+  nonNegativeMedian.summary.medianSignalDbm = 0;
+  assert.throws(() => spatial.validatePublicOutputs(nonNegativeMedian), /median|negative/i);
+});
+
+test('rejects signal histogram and radio counts that do not equal observations', () => {
+  const histogramMismatch = syntheticOutput();
+  histogramMismatch.summary.signalHistogram[0].observations += 1;
+  assert.throws(() => spatial.validatePublicOutputs(histogramMismatch), /histogram|observation|count/i);
+
+  const radioMismatch = syntheticOutput();
+  radioMismatch.summary.radioTypeCounts['802.11n'] += 1;
+  assert.throws(() => spatial.validatePublicOutputs(radioMismatch), /radio|observation|count/i);
+});
+
+test('allows only small floating point geometry drift on the fixed lattice', () => {
+  const withinTolerance = syntheticOutput();
+  withinTolerance.grid.cells[0].bounds.south += 5e-11;
+  assert.doesNotThrow(() => spatial.validatePublicOutputs(withinTolerance));
+
+  const outsideTolerance = syntheticOutput();
+  outsideTolerance.grid.cells[0].bounds.south += 1e-7;
+  assert.throws(() => spatial.validatePublicOutputs(outsideTolerance), /geometry|lattice/i);
+});
+
+test('maps unrecognized category strings to Other / Unknown before publishing', () => {
+  const result = spatial.normalizeRawRow({
+    ...fixture(8000, 43000),
+    AUTHENTICATION: 'aa:bb:cc:dd:ee:ff',
+    ENCRYPTION: 'Custom Cipher',
+    RADIO_TYPE: '802.11zz',
+  });
+
+  assert.equal(result.rejection, null);
+  assert.equal(result.observation.authentication, 'Other / Unknown');
+  assert.equal(result.observation.encryption, 'Other / Unknown');
+  assert.equal(result.observation.radioType, 'Other / Unknown');
+});
+
+test('validates the checked-in public JSON and its aggregate partitions', () => {
+  const output = checkedInPublicOutputs();
+
+  assert.doesNotThrow(() => spatial.validatePublicOutputs(output));
+  assert.equal(output.grid.cells.every((cell) => cell.uniqueNetworkCount >= 5), true);
+  assert.equal(output.summary.publishedCellCount, output.grid.cells.length);
+  assert.equal(
+    output.summary.signalHistogram.reduce((total, bin) => total + bin.observations, 0),
+    output.summary.observationCount,
+  );
+  assert.equal(
+    Object.values(output.summary.radioTypeCounts).reduce((total, count) => total + count, 0),
+    output.summary.observationCount,
+  );
+  assert.equal(new Set(output.presets.areas.flatMap((area) => area.cellIds)).size, 27);
 });
 
 test('CLI requires exactly one input and output argument', () => {

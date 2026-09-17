@@ -76,14 +76,20 @@ test('loads the primary survey as observations with measured signals', async () 
   const { loadCSVFromPath } = loadTypescript('src/utils/csvParser.ts');
   const { getObservationMetrics } = loadTypescript('src/utils/analysisUtils.ts');
   const { PRIMARY_DATASET } = loadTypescript('src/constants/dataset.ts');
+  const csv = [
+    'SSID,BSSID,latitude,longitude,signal,frequency,AUTHENTICATION',
+    'Synthetic One,TEST-A,18,102,-65,2412,OWE',
+    'Synthetic Two,test-a,18.001,102.001,-75,5180,Open',
+    'Synthetic Three,TEST-B,18.002,102.002,,2412,WPA2-Personal',
+  ].join('\n');
   const originalFetch = global.fetch;
   global.fetch = async (url) => {
     assert.equal(url, '/CSV_FILE/Chanthabuly%20merge%20all%20zone.csv');
-    return { ok: true, text: async () => fs.readFileSync(path.resolve(__dirname, '../public/CSV_FILE/Chanthabuly merge all zone.csv'), 'utf8') };
+    return { ok: true, text: async () => csv };
   };
   try {
     const data = await loadCSVFromPath(PRIMARY_DATASET);
-    assert.deepEqual(getObservationMetrics(data), { observationCount: 32165, uniqueBssidCount: 25291 });
+    assert.deepEqual(getObservationMetrics(data), { observationCount: 3, uniqueBssidCount: 2 });
     assert.equal(data.some(row => row.signal !== null && row.signal > 0), false);
     assert.equal(data.filter(row => row.signal === null).length, 1);
     assert.equal(data.every(row => row.latitude !== 0 && row.longitude !== 0), true);
