@@ -64,11 +64,18 @@ export default function MapNav({ onFilterChange, onSearchChange, currentFilter, 
           >
             OPEN
           </Button>
+          <Button
+            className="rounded-full cursor-pointer whitespace-nowrap text-xs md:text-sm px-3 md:px-4"
+            onClick={() => onFilterChange("owe")}
+            id={currentFilter === "owe" ? "button-active" : undefined}
+          >
+            OWE
+          </Button>
         </div>
         <form onSubmit={handleSearchSubmit} className="flex gap-2 w-full md:w-auto">
           <Input
             type="text"
-            placeholder="Search by WiFi name or BSSID..."
+            placeholder="Search by network name..."
             value={localSearch}
             onChange={handleSearchInput}
             className="rounded-full border-2 border-gray-300 px-4 py-2 w-full md:w-56 text-black text-sm"

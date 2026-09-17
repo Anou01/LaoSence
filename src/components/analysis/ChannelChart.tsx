@@ -39,7 +39,7 @@ export function ChannelChart() {
   return (
     <Card className="py-0">
       <CardHeader className="flex flex-col items-stretch border-b px-6 py-4">
-        <CardTitle>Channel Distribution</CardTitle>
+        <CardTitle>Most observed channels</CardTitle>
       </CardHeader>
 
       <CardContent className="px-2 sm:p-6">

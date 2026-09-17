@@ -1,89 +1,63 @@
-//csvParser.ts
+﻿import Papa from 'papaparse';
+import type { WiFiData } from '@/type/wifi';
 
-import Papa from "papaparse";
-import type { WiFiData } from "@/type/wifi";
+type CsvRow = Record<string, unknown>;
 
-export const parseWiFiCSV = async (file: File): Promise<WiFiData[]> => {
-  return new Promise((resolve, reject) => {
-    Papa.parse(file, {
-      header: true,
-      dynamicTyping: true,
-      skipEmptyLines: true,
-      transformHeader: (header) => header.trim(),
-      complete: (results) => {
-        const data = results.data as WiFiData[];
-        const validData = data.filter(
-          (row) =>
-            (row.latitude || row.LATITUDE) &&
-            (row.longitude || row.LONGITUDE) &&
-            !isNaN(row.latitude || row.LATITUDE) &&
-            !isNaN(row.longitude || row.LONGITUDE) &&
-            (row.latitude || row.LATITUDE) !== 0 &&
-            (row.longitude || row.LONGITUDE) !== 0
-        );
-        resolve(validData);
-      },
-      error: (error: any) => {
-        reject(error);
-      },
-    });
-  });
+const text = (value: unknown): string =>
+  typeof value === 'string' || typeof value === 'number' ? String(value).trim() : '';
+
+const number = (value: unknown): number | null => {
+  const normalized = text(value);
+  if (!normalized) return null;
+  const parsed = Number(normalized);
+  return Number.isFinite(parsed) ? parsed : null;
 };
 
+export function normalizeWiFiRow(row: CsvRow): WiFiData | null {
+  const latitude = number(row.latitude);
+  const longitude = number(row.longitude);
+  if (latitude === null || longitude === null ||
+      Math.abs(latitude) > 90 || Math.abs(longitude) > 180 ||
+      (latitude === 0 && longitude === 0)) return null;
+
+  const recordedSignal = number(row.signal);
+  return {
+    ssid: text(row.SSID ?? row.ssid),
+    bssid: text(row.BSSID ?? row.bssid),
+    manufacturer: text(row.MANUFACTURER ?? row.manufacturer),
+    authentication: text(row.AUTHENTICATION ?? row.authentication),
+    encryption: text(row.ENCRYPTION ?? row.encryption),
+    radioType: text(row['RADIO TYPE'] ?? row.RADIO_TYPE ?? row.radioType),
+    channel: number(row.CHANNEL ?? row.channel),
+    latitude,
+    longitude,
+    signal: recordedSignal !== null && recordedSignal < 0 ? recordedSignal : null,
+    frequency: number(row.frequency ?? row.FREQUENCY),
+    observedAt: text(row['DATE(UTC)']) || null,
+  };
+}
+
+const parse = (input: string | File): Promise<WiFiData[]> => new Promise((resolve, reject) => {
+  Papa.parse<CsvRow>(input, {
+    header: true,
+    dynamicTyping: true,
+    skipEmptyLines: true,
+    transformHeader: (header) => header.trim(),
+    complete: (results) => {
+      if (results.errors.length) {
+        reject(new Error(`CSV parse error: ${results.errors[0].message}`));
+        return;
+      }
+      resolve(results.data.map(normalizeWiFiRow).filter((row): row is WiFiData => row !== null));
+    },
+    error: (error: Error) => reject(error),
+  });
+});
+
+export const parseWiFiCSV = (file: File): Promise<WiFiData[]> => parse(file);
+
 export const loadCSVFromPath = async (path: string): Promise<WiFiData[]> => {
-  try {
-    const response = await fetch(path);
-    
-    if (!response.ok) {
-      throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-    }
-    
-    const text = await response.text();
-    
-    return new Promise((resolve, reject) => {
-      Papa.parse(text, {
-        header: true,
-        dynamicTyping: true,
-        skipEmptyLines: true,
-        transformHeader: (header) => header.trim(),
-        complete: (results) => {
-          const data = results.data as any[];
-          
-          // Normalize column names (handle both uppercase and lowercase)
-          const normalizedData = data.map(row => ({
-            ...row,
-            latitude: row.latitude || row.LATITUDE,
-            longitude: row.longitude || row.LONGITUDE,
-            SSID: row.SSID || row.ssid,
-            BSSID: row.BSSID || row.bssid,
-            AUTHENTICATION: row.AUTHENTICATION || row.authentication,
-            ENCRYPTION: row.ENCRYPTION || row.encryption,
-            CHANNEL: row.CHANNEL || row.channel,
-            'RADIO TYPE': row['RADIO TYPE'] || row['radio type'] || row.radioType,
-            frequency: row.frequency || row.FREQUENCY,
-            signal: row.signal || row.SIGNAL,
-            MANUFACTURER: row.MANUFACTURER || row.manufacturer,
-          }));
-          
-          const validData = normalizedData.filter(
-            (row) =>
-              row.latitude &&
-              row.longitude &&
-              !isNaN(row.latitude) &&
-              !isNaN(row.longitude) &&
-              row.latitude !== 0 &&
-              row.longitude !== 0
-          );
-          
-          console.log(`Parsed ${data.length} rows, ${validData.length} valid entries`);
-          resolve(validData as WiFiData[]);
-        },
-        error: (error) => {
-          reject(new Error(`Parse error: ${error.message}`));
-        },
-      });
-    });
-  } catch (error) {
-    throw new Error(`Failed to load CSV from ${path}: ${error instanceof Error ? error.message : 'Unknown error'}`);
-  }
+  const response = await fetch(encodeURI(path));
+  if (!response.ok) throw new Error(`Unable to load dataset: HTTP ${response.status}`);
+  return parse(await response.text());
 };

@@ -56,4 +56,6 @@ function Button({
   )
 }
 
+// Shared variant definitions are intentionally exported with the component.
+// eslint-disable-next-line react-refresh/only-export-components
 export { Button, buttonVariants }

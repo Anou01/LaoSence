@@ -1,133 +1,29 @@
-import { Link } from "react-router-dom";
-import { useState } from "react";
-import { Menu, X } from "lucide-react";
+﻿import { Link } from 'react-router-dom';
+import { useState } from 'react';
+import { Menu, X } from 'lucide-react';
+
+const links = [
+  { to: '/', label: 'Map' },
+  { to: '/analysis', label: 'Analytics' },
+];
 
 export default function NavBar() {
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-
-  const toggleMobileMenu = () => {
-    setMobileMenuOpen(!mobileMenuOpen);
-  };
-
-  const closeMobileMenu = () => {
-    setMobileMenuOpen(false);
-  };
-
-  return (
-    <>
-      <nav className="flex justify-between items-center bg-primary text-primary-foreground px-6 py-4 shadow-lg border-b border-primary/20 backdrop:shadow-lg sticky top-0 left-0 w-full z-[1000]">
-        {/* Logo */}
-        <Link to="/">
-          <h1 className="text-lg md:text-xl font-bold tracking-wide">
-            CEIT CYBER X NETWORK
-          </h1>
-        </Link>
-
-        {/* Desktop Navigation */}
-        <ul className="hidden md:flex justify-center items-center gap-10 font-bold text-primary-foreground">
-          <li>
-            <Link to="/" className="hover:opacity-80 transition-opacity">Map</Link>
-          </li>
-          <li>
-            <Link to="/analysis" className="hover:opacity-80 transition-opacity">Analysis</Link>
-          </li>
-          <li>
-            <Link to="/game" className="hover:opacity-80 transition-opacity">Game</Link>
-          </li>
-          <li>
-            <Link to="/about" className="hover:opacity-80 transition-opacity">AboutUs</Link>
-          </li>
-          <li>
-            <Link to="/contact" className="hover:opacity-80 transition-opacity">Contact</Link>
-          </li>
-        </ul>
-
-        {/* Mobile Hamburger Button */}
-        <button
-          onClick={toggleMobileMenu}
-          className="md:hidden p-2 hover:bg-primary-foreground/10 rounded-md transition-colors z-[1102]"
-          aria-label="Toggle menu"
-        >
-          {mobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
-        </button>
-      </nav>
-
-      {/* Mobile Menu Overlay */}
-      {mobileMenuOpen && (
-        <div
-          className="fixed inset-0 bg-black/50 z-[1100] md:hidden"
-          onClick={closeMobileMenu}
-        />
-      )}
-
-      {/* Mobile Slide-in Menu */}
-      <div
-        className={`fixed top-0 right-0 h-full w-64 bg-primary text-primary-foreground z-[1101] transform transition-transform duration-300 ease-in-out md:hidden ${mobileMenuOpen ? "translate-x-0" : "translate-x-full"
-          }`}
-      >
-        <div className="flex flex-col h-full">
-          {/* Mobile Menu Header */}
-          <div className="flex justify-between items-center px-6 py-4 border-b border-primary-foreground/20">
-            <h2 className="text-lg font-bold">Menu</h2>
-            <button
-              onClick={closeMobileMenu}
-              className="p-2 hover:bg-primary-foreground/10 rounded-md transition-colors"
-              aria-label="Close menu"
-            >
-              <X size={24} />
-            </button>
-          </div>
-
-          {/* Mobile Menu Links */}
-          <ul className="flex flex-col gap-2 p-6 font-bold">
-            <li>
-              <Link
-                to="/"
-                onClick={closeMobileMenu}
-                className="block py-3 px-4 hover:bg-primary-foreground/10 rounded-md transition-colors"
-              >
-                Map
-              </Link>
-            </li>
-            <li>
-              <Link
-                to="/analysis"
-                onClick={closeMobileMenu}
-                className="block py-3 px-4 hover:bg-primary-foreground/10 rounded-md transition-colors"
-              >
-                Analysis
-              </Link>
-            </li>
-            <li>
-              <Link
-                to="/game"
-                onClick={closeMobileMenu}
-                className="block py-3 px-4 hover:bg-primary-foreground/10 rounded-md transition-colors"
-              >
-                Game
-              </Link>
-            </li>
-            <li>
-              <Link
-                to="/about"
-                onClick={closeMobileMenu}
-                className="block py-3 px-4 hover:bg-primary-foreground/10 rounded-md transition-colors"
-              >
-                About Us
-              </Link>
-            </li>
-            <li>
-              <Link
-                to="/contact"
-                onClick={closeMobileMenu}
-                className="block py-3 px-4 hover:bg-primary-foreground/10 rounded-md transition-colors"
-              >
-                Contact
-              </Link>
-            </li>
-          </ul>
-        </div>
+  const [open, setOpen] = useState(false);
+  return <nav className="sticky top-0 z-[1000] border-b border-teal-900/20 bg-primary px-6 py-3 text-primary-foreground shadow-sm">
+    <div className="mx-auto flex max-w-7xl items-center justify-between gap-4">
+      <Link to="/" className="font-bold tracking-wide" onClick={() => setOpen(false)}>
+        <span className="block text-xl">LaoSence</span>
+        <span className="block text-xs font-normal opacity-90">Urban Wireless Intelligence Platform</span>
+      </Link>
+      <div className="hidden gap-8 font-medium md:flex">
+        {links.map(link => <Link key={link.to} to={link.to} className="hover:underline">{link.label}</Link>)}
       </div>
-    </>
-  );
+      <button type="button" aria-label="Toggle menu" className="md:hidden" onClick={() => setOpen(!open)}>
+        {open ? <X /> : <Menu />}
+      </button>
+    </div>
+    {open && <div className="mt-3 flex flex-col gap-3 border-t border-white/20 pt-3 md:hidden">
+      {links.map(link => <Link key={link.to} to={link.to} onClick={() => setOpen(false)}>{link.label}</Link>)}
+    </div>}
+  </nav>;
 }

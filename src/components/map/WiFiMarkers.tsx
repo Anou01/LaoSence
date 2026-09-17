@@ -6,9 +6,8 @@ import "leaflet.markercluster/dist/MarkerCluster.css";
 import "leaflet.markercluster/dist/MarkerCluster.Default.css";
 import {
   type WiFiData,
-  getSignalColor,
   getSignalStrength,
-  getSecurityLevel,
+  getBand,
 } from "@/type/wifi";
 import { LOCATION_ICONS } from "@/constants/location_icon";
 
@@ -36,8 +35,16 @@ const getOrCreateIcon = (color: "green" | "yellow" | "red"): L.Icon => {
   return iconInstances[color]!;
 };
 
-const getIconForSignal = (signal: number): L.Icon => {
-  const signalValue = typeof signal === "number" ? signal : parseFloat(signal);
+const getIconForSignal = (signal: number | null): L.Icon | L.DivIcon => {
+  if (signal === null) {
+    return L.divIcon({
+      html: '<span style="display:block;width:20px;height:20px;border-radius:50%;background:#64748b;border:2px solid white"></span>',
+      className: 'wifi-signal-unknown',
+      iconSize: [20, 20],
+      iconAnchor: [10, 10],
+    });
+  }
+  const signalValue = signal ?? Number.NaN;
 
   if (isNaN(signalValue) || signalValue < -70) {
     return getOrCreateIcon("red");
@@ -48,135 +55,25 @@ const getIconForSignal = (signal: number): L.Icon => {
   }
 };
 
+const escapeHtml = (value: string): string => value.replace(/[&<>"']/g, char =>
+  ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[char] ?? char
+);
+
 const createSingleWiFiPopup = (wifi: WiFiData): string => {
-  const security = getSecurityLevel(wifi.AUTHENTICATION);
-  const signalStrength = getSignalStrength(wifi.signal);
-  const signalColor = getSignalColor(wifi.signal);
-
-  const getSignalBadgeClass = (signal: number) => {
-    if (signal >= -50) return "bg-green-500";
-    if (signal >= -60) return "bg-blue-500";
-    if (signal >= -70) return "bg-yellow-500";
-    return "bg-red-500";
-  };
-
-  const getSecurityBadgeClass = (auth: string) => {
-    if (auth.includes("WPA3")) return "bg-green-500";
-    if (auth.includes("WPA2")) return "bg-blue-500";
-    return "bg-red-500";
-  };
-
-  const signalBadgeClass = getSignalBadgeClass(wifi.signal);
-  const securityBadgeClass = getSecurityBadgeClass(wifi.AUTHENTICATION);
-
-  const tableRows = [
-    {
-      property: "Network Name (SSID)",
-      value: wifi.SSID || "🔒 Hidden Network",
-      icon: true,
-    },
-    { property: "MAC Address (BSSID)", value: wifi.BSSID, icon: false },
-    {
-      property: "Signal Strength",
-      value: `${wifi.signal} dBm`,
-      badge: signalStrength,
-      badgeClass: signalBadgeClass,
-      icon: true,
-    },
-    {
-      property: "Security",
-      value: wifi.AUTHENTICATION,
-      badge: security.level,
-      badgeClass: securityBadgeClass,
-      icon: true,
-    },
-    { property: "Encryption", value: wifi.ENCRYPTION || "N/A", icon: false },
-    {
-      property: "Channel / Frequency",
-      value: `Ch ${wifi.CHANNEL} (${wifi.frequency} MHz)`,
-      icon: true,
-    },
-    { property: "Radio Type", value: wifi["RADIO TYPE"], icon: false },
-    {
-      property: "Location",
-      value: `${wifi.latitude.toFixed(6)}°N, ${wifi.longitude.toFixed(6)}°E`,
-      icon: false,
-    },
+  const details = [
+    ['Authentication', wifi.authentication || 'Unknown'],
+    ['Encryption', wifi.encryption || 'Unknown'],
+    ['Band', getBand(wifi.frequency)],
+    ['Channel', wifi.channel === null ? 'Unknown' : String(wifi.channel)],
+    ['Signal', wifi.signal === null ? 'Unknown' : `${wifi.signal} dBm (${getSignalStrength(wifi.signal)})`],
+    ['Manufacturer', wifi.manufacturer || 'Unknown'],
   ];
-
-  return `
-    <div class="w-full max-w-sm sm:max-w-md md:max-w-2xl lg:max-w-3xl xl:max-w-4xl mx-auto p-2 sm:p-3 lg:p-4 space-y-2 sm:space-y-3 lg:space-y-4">
-      <div class="flex items-center gap-2 sm:gap-3 lg:gap-4 mb-2 sm:mb-3 lg:mb-4">
-        <div class="p-1.5 sm:p-2 lg:p-3 bg-blue-100 rounded-lg flex-shrink-0">
-          <svg class="w-4 h-4 sm:w-5 sm:h-5 md:w-6 md:h-6 lg:w-7 lg:h-7 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.111 16.404a5.5 5.5 0 017.778 0M12 20h.01m-7.08-7.071c3.904-3.905 10.236-3.905 14.141 0M1.394 9.393c5.857-5.857 15.355-5.857 21.213 0"></path>
-          </svg>
-        </div>
-        <div class="min-w-0 flex-1">
-          <h2 class="text-base sm:text-lg md:text-xl lg:text-2xl font-bold text-gray-900 truncate">WiFi Network Details</h2>
-          <p class="text-xs sm:text-sm lg:text-base text-gray-500 hidden sm:block">Complete information about detected network</p>
-        </div>
-      </div>
-
-      <div class="border rounded-lg overflow-hidden shadow-sm">
-        <div class="overflow-x-auto">
-          <table class="w-full min-w-[280px]">
-            <thead>
-              <tr class="bg-gray-50 border-b">
-                <th class="text-left py-2 px-2 sm:px-3 lg:py-3 lg:px-4 font-semibold text-xs sm:text-sm lg:text-base text-gray-700">Property</th>
-                <th class="text-left py-2 px-2 sm:px-3 lg:py-3 lg:px-4 font-semibold text-xs sm:text-sm lg:text-base text-gray-700">Value</th>
-              </tr>
-            </thead>
-            <tbody>
-              ${tableRows
-      .map(
-        (row, index) => `
-              <tr class="border-b hover:bg-gray-50 transition-colors">
-                <td class="py-2 px-2 sm:px-3 lg:py-3 lg:px-4 font-medium text-xs sm:text-sm lg:text-base text-gray-900">
-                  <div class="flex items-center gap-1 sm:gap-2 lg:gap-3">
-                    ${row.icon
-            ? `<span class="text-gray-500 flex-shrink-0">${getIcon(
-              row.property
-            )}</span>`
-            : ""
-          }
-                    <span class="truncate">${row.property}</span>
-                  </div>
-                </td>
-                <td class="py-2 px-2 sm:px-3 lg:py-3 lg:px-4 text-xs sm:text-sm lg:text-base text-gray-700">
-                  <div class="flex items-center gap-1 sm:gap-2 lg:gap-3 flex-wrap">
-                    <span class="break-all">${row.value}</span>
-                    ${row.badge
-            ? `<span class="inline-flex items-center px-1.5 sm:px-2 lg:px-2.5 py-0.5 lg:py-1 rounded-full text-[10px] sm:text-xs lg:text-sm font-medium text-white ${row.badgeClass} whitespace-nowrap">${row.badge}</span>`
-            : ""
-          }
-                  </div>
-                </td>
-              </tr>
-            `
-      )
-      .join("")}
-            </tbody>
-          </table>
-        </div>
-      </div>
-    </div>
-  `;
+  return `<div class="p-3"><h2 class="font-semibold">Observed Network</h2><dl>${details
+    .map(([label, value]) => `<div><dt class="inline font-medium">${escapeHtml(label)}:</dt> <dd class="inline">${escapeHtml(value)}</dd></div>`)
+    .join('')}</dl></div>`;
 };
 
-function getIcon(property: string): string {
-  const icons: Record<string, string> = {
-    "Network Name (SSID)":
-      '<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.111 16.404a5.5 5.5 0 017.778 0M12 20h.01m-7.08-7.071c3.904-3.905 10.236-3.905 14.141 0M1.394 9.393c5.857-5.857 15.355-5.857 21.213 0"></path></svg>',
-    "Signal Strength":
-      '<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path></svg>',
-    Security:
-      '<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path></svg>',
-    "Channel / Frequency":
-      '<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"></path></svg>',
-  };
-  return icons[property] || "";
-}
+type WiFiMarker = L.Marker & { _wifiData?: WiFiData };
 
 export const WiFiMarkers: React.FC<WiFiMarkersProps> = ({ data }) => {
   const map = useMap();
@@ -263,10 +160,11 @@ export const WiFiMarkers: React.FC<WiFiMarkersProps> = ({ data }) => {
       clusterGroupRef.current = clusterGroup;
 
       // Handle cluster click - expand THIS cluster only
-      clusterGroup.on("clusterclick", (event: any) => {
-        event.originalEvent.stopPropagation();
+      clusterGroup.on("clusterclick", (event) => {
+        const clusterEvent = event as L.LeafletEvent & { layer: L.MarkerCluster; originalEvent?: MouseEvent };
+        clusterEvent.originalEvent?.stopPropagation();
 
-        const cluster = event.layer;
+        const cluster = clusterEvent.layer;
         const childMarkers = cluster.getAllChildMarkers();
         const clusterSize = childMarkers.length;
 
@@ -324,9 +222,9 @@ export const WiFiMarkers: React.FC<WiFiMarkersProps> = ({ data }) => {
         expandedLayer.addTo(map);
 
         // Group markers by location to handle overlapping markers
-        const locationGroups = new Map<string, any[]>();
-        childMarkers.forEach((marker: any) => {
-          const wifi = marker._wifiData;
+        const locationGroups = new Map<string, WiFiData[]>();
+        childMarkers.forEach((marker: L.Marker) => {
+          const wifi = (marker as WiFiMarker)._wifiData;
           if (wifi) {
             const key = `${wifi.latitude.toFixed(6)},${wifi.longitude.toFixed(6)}`;
             if (!locationGroups.has(key)) {
@@ -337,7 +235,7 @@ export const WiFiMarkers: React.FC<WiFiMarkersProps> = ({ data }) => {
         });
 
         // Process markers in batches to avoid freezing
-        const allWifiData: any[] = [];
+        const allWifiData: { wifi: WiFiData; lat: number; lng: number }[] = [];
         locationGroups.forEach((wifis, locationKey) => {
           const [lat, lng] = locationKey.split(',').map(Number);
 
@@ -455,11 +353,16 @@ export const WiFiMarkers: React.FC<WiFiMarkersProps> = ({ data }) => {
             // Create invisible marker (will only be visible when cluster is clicked)
             const marker = L.marker([wifi.latitude, wifi.longitude], {
               icon: getIconForSignal(wifi.signal),
-              opacity: 0, // Hidden until expanded
+              opacity: 1, // Leaflet hides child markers while they are clustered
+            });
+            marker.bindPopup(createSingleWiFiPopup(wifi), {
+              maxWidth: 420,
+              minWidth: 250,
+              className: 'wifi-custom-popup',
             });
 
             // Store wifi data
-            (marker as any)._wifiData = wifi;
+            (marker as WiFiMarker)._wifiData = wifi;
 
             markers.push(marker);
           } catch (error) {

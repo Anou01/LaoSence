@@ -1,10 +1,14 @@
-import React, { useState } from "react";
+import { useMemo, useState } from "react";
 import MapAside from "@/layouts/map_layout/MapAside";
 import MapNav from "@/layouts/map_layout/MapNav";
 import MapComponent from "@/components/MapComponent"; // Adjust path as needed
-import { LocationPosition } from "@/utils/locationUtils";
+import type { LocationPosition } from "@/utils/locationUtils";
+import { useWiFiData } from "@/context/WiFiDataContext";
+import { getObservationMetrics } from "@/utils/analysisUtils";
 
 export default function MapPage() {
+  const { wifiData, loading } = useWiFiData();
+  const metrics = useMemo(() => getObservationMetrics(wifiData), [wifiData]);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [userLocation, setUserLocation] = useState<LocationPosition | null>(
     null
@@ -28,9 +32,6 @@ export default function MapPage() {
     setSearchQuery(query);
   };
 
-  // Debug
-  console.log("user location:", userLocation);
-
   return (
     <div className="relative h-[calc(100vh-4rem)] w-full overflow-hidden">
       {/* Top navigation bar */}
@@ -53,8 +54,8 @@ export default function MapPage() {
       <MapComponent
         userLocation={userLocation}
         onLocationUpdate={handleLocationUpdate}
-        center={[17.9757, 102.6369]}
-        zoom={7}
+        center={[17.997, 102.608]}
+        zoom={12}
         minZoom={5}
         maxZoom={18}
         className="h-full w-full"
@@ -64,6 +65,10 @@ export default function MapPage() {
         authFilter={authFilter}
         searchQuery={searchQuery}
       />
+      <div className="absolute bottom-4 right-4 z-[900] max-w-xs rounded-lg bg-white/95 p-3 text-xs text-slate-700 shadow-md">
+        <strong>Chanthabuly survey</strong><br />
+        {loading ? 'Loading observations…' : `${metrics.observationCount.toLocaleString()} observations · ${metrics.uniqueBssidCount.toLocaleString()} unique BSSIDs`}
+      </div>
     </div>
   );
 }

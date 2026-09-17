@@ -1,4 +1,3 @@
-import React from 'react'
 import AllChartContainer from '@/components/analysis/AllChartContainer'
 
 export default function AdminAnalysisPage() {

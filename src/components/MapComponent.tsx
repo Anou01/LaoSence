@@ -1,12 +1,11 @@
-import React, { useRef, useEffect, useState, useMemo } from "react";
+import { useRef, useEffect, useMemo } from "react";
 import { MapContainer, TileLayer, ZoomControl } from "react-leaflet";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 import LocationButton from "@/components/map/LocationButton";
 import { getCurrentPosition, type LocationPosition } from "@/utils/locationUtils";
-import { type WiFiData } from "@/type/wifi";
 import { WiFiMarkers } from "@/components/map/WiFiMarkers";
-import { loadCSVFromPath } from "@/utils/csvParser";
+import { useWiFiData } from "@/context/WiFiDataContext";
 
 interface MapComponentProps {
   userLocation: LocationPosition | null;
@@ -40,57 +39,7 @@ export default function MapComponent({
   const mapRef = useRef<L.Map | null>(null);
   const userMarkerRef = useRef<L.Marker | null>(null);
 
-  // WiFi data state
-  const [wifiData, setWifiData] = useState<WiFiData[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-
-  // Load WiFi data on component mount
-  useEffect(() => {
-    const loadData = async () => {
-      try {
-        setLoading(true);
-        setError(null);
-
-        // List of all CSV files to load
-        const csvFiles = [
-          '/CSV_FILE/Chanthabuly merge all zone.csv',
-          '/CSV_FILE/LPB-result.csv',
-          '/CSV_FILE/ZONE A2.csv',
-          '/CSV_FILE/result-VTE.csv',
-          '/CSV_FILE/result_FOEN.csv'
-        ];
-
-        // Load all CSV files concurrently
-        const loadPromises = csvFiles.map(async (filePath) => {
-          try {
-            const data = await loadCSVFromPath(filePath);
-            console.log(`Loaded ${data.length} access points from ${filePath.split('/').pop()}`);
-            return data;
-          } catch (err) {
-            console.error(`Failed to load ${filePath}:`, err);
-            return []; // Return empty array if file fails to load
-          }
-        });
-
-        // Wait for all files to load
-        const allData = await Promise.all(loadPromises);
-
-        // Combine all data into a single array
-        const combinedData = allData.flat();
-
-        setWifiData(combinedData);
-        console.log(`Successfully loaded ${combinedData.length} total WiFi access points from ${csvFiles.length} files`);
-      } catch (err) {
-        console.error('Error loading WiFi data:', err);
-        setError('Failed to load WiFi data. Please check the CSV file paths.');
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    loadData();
-  }, []);
+  const { wifiData, loading, error } = useWiFiData();
 
   // Filter WiFi data based on authentication type and search query
   const filteredWifiData = useMemo(() => {
@@ -99,7 +48,7 @@ export default function MapComponent({
     // Filter by authentication type
     if (authFilter && authFilter !== "all") {
       filtered = filtered.filter((wifi) => {
-        const auth = wifi.AUTHENTICATION?.toLowerCase() || "";
+        const auth = wifi.authentication.toLowerCase() || "";
 
         switch (authFilter.toLowerCase()) {
           case "wpa":
@@ -108,6 +57,8 @@ export default function MapComponent({
             return auth.includes("wpa2");
           case "wpa3":
             return auth.includes("wpa3");
+          case "owe":
+            return auth.includes("owe");
           case "open":
             return auth === "open" || auth === "" || auth.includes("open");
           default:
@@ -116,13 +67,12 @@ export default function MapComponent({
       });
     }
 
-    // Filter by SSID (WiFi name) or BSSID (MAC address) search query
+    // Public search uses SSID only; BSSID lookup is intentionally unavailable.
     if (searchQuery && searchQuery.trim() !== "") {
       const query = searchQuery.toLowerCase().trim();
       filtered = filtered.filter((wifi) => {
-        const ssid = String(wifi.SSID || "").toLowerCase();
-        const bssid = String(wifi.BSSID || "").toLowerCase();
-        return ssid.includes(query) || bssid.includes(query);
+        const ssid = String(wifi.ssid || "").toLowerCase();
+        return ssid.includes(query);
       });
     }
 
@@ -182,13 +132,7 @@ export default function MapComponent({
         icon: userLocationIcon
       })
         .addTo(mapRef.current)
-        .bindPopup(`
-        <div>
-          <strong>You are here!</strong><br/>
-          <small>Lat: ${userLocation.latitude.toFixed(6)}<br/>
-          Lng: ${userLocation.longitude.toFixed(6)}</small>
-        </div>
-      `)
+        .bindPopup("Your approximate location")
         .openPopup();
     }
   }, [userLocation]);

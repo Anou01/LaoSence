@@ -1,6 +1,6 @@
-import React, { useState } from 'react'
+import { useState } from 'react'
 import MapComponent from '@/components/MapComponent'
-import { LocationPosition } from '@/utils/locationUtils'
+import type { LocationPosition } from '@/utils/locationUtils'
 
 export default function AdminMapPage() {
   const [userLocation, setUserLocation] = useState<LocationPosition | null>(null)

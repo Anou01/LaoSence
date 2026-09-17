@@ -1,14 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { AudioWaveform, Command, GalleryVerticalEnd } from "lucide-react";
-
-import {
-  IconAccessPoint,
-  IconAutomation,
-  IconUpload,
-  IconMessage,
-} from "@tabler/icons-react";
+import { AudioWaveform, Command, GalleryVerticalEnd, RadioTower, Workflow, Upload, MessageSquare } from "lucide-react";
 
 import { NavMain } from "@/components/admin/nav-main";
 import { NavProjects } from "@/components/admin/nav-projects";
@@ -16,7 +9,6 @@ import { TeamSwitcher } from "@/components/admin/team-switcher";
 import {
   Sidebar,
   SidebarContent,
-  SidebarFooter,
   SidebarHeader,
   SidebarRail,
 } from "@/components/ui/sidebar";
@@ -49,7 +41,7 @@ const data = {
     {
       title: "Dashboard",
       url: "/admin/dashboard",
-      icon: IconAccessPoint,
+      icon: RadioTower,
       isActive: true,
       isOpen: true, // Always keep expanded
       items: [
@@ -70,7 +62,7 @@ const data = {
     {
       title: "Process Files",
       url: "/admin/process",
-      icon: IconAutomation,
+      icon: Workflow,
       isOpen: true, // Always keep expanded
       items: [
         {
@@ -86,7 +78,7 @@ const data = {
     {
       title: "Upload Files",
       url: "/admin/upload",
-      icon: IconUpload,
+      icon: Upload,
       isOpen: true, // Always keep expanded
       items: [
         {
@@ -100,7 +92,7 @@ const data = {
     {
       name: "Messaging",
       url: "/admin/messaging",
-      icon: IconMessage,
+      icon: MessageSquare,
     },
   ],
 };

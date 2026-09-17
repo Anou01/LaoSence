@@ -43,7 +43,7 @@ export function SignalStrengthChart() {
     <CardSig className="py-0">
       <CardHeaderSig className="flex flex-col items-stretch border-b px-6 py-4">
         <div className="flex flex-1 flex-col justify-center gap-1">
-          <CardTitleSig>Signal Strength Distribution</CardTitleSig>
+          <CardTitleSig>Recorded signal (dBm)</CardTitleSig>
         </div>
       </CardHeaderSig>
       <CardContentSig className="px-2 sm:p-6">
@@ -81,7 +81,7 @@ export function SignalStrengthChart() {
               content={
                 <ChartTooltipContentSig
                   className="w-[150px]"
-                  labelFormatter={(value) => `Signal: ${value} dBm`}
+                  labelFormatter={(value) => `Signal: ${value}`}
                   formatter={(value) => [value, "Networks"]}
                 />
               }

@@ -15,6 +15,7 @@ import AdminUploadPage from "./pages/admin/AdminUploadPage";
 import AdminAnalysisPage from "./pages/admin/AdminAnalysisPage";
 import AdminMapPage from "./pages/admin/AdminMapPage";
 import Layout from "./layouts/Layout";
+import { WiFiDataProvider } from "./context/WiFiDataContext";
 import "./index.css";
 
 // You'll need to create these components for the nested routes when uncommented
@@ -25,6 +26,7 @@ import MessagingPage from "./pages/admin/MessagingPage";
 ReactDOM.createRoot(document.getElementById("root")!).render(
   <React.StrictMode>
     <BrowserRouter>
+      <WiFiDataProvider>
       <Layout>
         <Routes>
           {/* Public Routes */}
@@ -66,6 +68,7 @@ ReactDOM.createRoot(document.getElementById("root")!).render(
           </Route>
         </Routes>
       </Layout>
+      </WiFiDataProvider>
     </BrowserRouter>
   </React.StrictMode>
 );

@@ -25,6 +25,7 @@ import { getAuthenticationDistribution } from "@/utils/analysisUtils";
 const chartConfig = {
   count: {
     label: "Count",
+    color: "#2563eb",
   },
   Open: {
     label: "Open",
@@ -137,8 +138,7 @@ export function AuthenticationMethodsChart() {
 // src/components/analysis/EncryptionTypeChart.tsx
 // ============================================
 
-import { TrendingUp } from "lucide-react";
-import { Label, Pie, PieChart, Sector } from "recharts";
+import { Pie, PieChart, Sector } from "recharts";
 import type { PieSectorDataItem } from "recharts/types/polar/Pie";
 
 import {
