@@ -106,4 +106,28 @@ Remaining issue: none for Task 2.
 
 Remaining issue: none for Task 3.
 
-Next task: **Task 4**. Do not start it in the Task 3 turn.
+## Task 4 - Types, cached loader, context, and shared presentation helpers
+
+- Status: complete
+- Branch: `laosence-phase2-spatial-intelligence`
+- Base SHA: `d8d4e9294153942d45845434d467a37666e67c61`
+- Commit message: `feat: add aggregate spatial data context`
+- Scoped files: `src/type/spatial.ts`, `src/utils/loadSpatialData.ts`, `src/context/spatialContext.ts`, `src/context/SpatialDataContext.tsx`, `src/utils/spatialMetrics.ts`, `src/components/DatasetLimitations.tsx`, `tests/spatial-ui.test.cjs`, `docs/phase2-progress.md`
+- Frontend migration: no root provider change, no Grid Map, and no mounted route changes. Raw CSV files: retained; no raw data was removed or modified.
+- Loader: requests only the three aggregate JSON URLs, validates runtime schema/geometry/counts/privacy before returning data, caches in-flight and resolved promises, and clears the cache after rejection for retry.
+- Context: exposes `SpatialDataState` through `useSpatialData()` with an active effect guard and retry invalidation; no request is aborted during shared cleanup.
+- Shared copy: `DatasetLimitations` includes the approved historical survey and suppression disclaimer.
+
+### Task 4 checks
+
+| Command | Exit | Result |
+|---|---:|---|
+| `node --test tests/spatial-ui.test.cjs` | 0 | 5 tests passed; 0 failed, 0 skipped, 0 todo. Covers band-share parity, three aggregate URLs, schema/geometry/private-field rejection, retry after HTTP failure, and same-promise deduplication. |
+| `npm.cmd test` | 0 | 35 tests passed; 0 failed, 0 skipped, 0 todo. |
+| `npm.cmd run build` | 0 | Passed. Existing Vite warning remains: the main JS chunk is larger than 500 kB after minification. |
+| `npm.cmd run lint` | 0 | Passed with no lint output. |
+| `git diff --check` | 0 | Passed. |
+
+Remaining issue: none for Task 4.
+
+Next task: **Task 5**. Do not start it in the Task 4 turn.
