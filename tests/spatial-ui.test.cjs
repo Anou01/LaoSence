@@ -133,6 +133,20 @@ test('collapses an all-equal intensity scale to one observed bin', () => {
   assert.match(scale.bins[0].label, /5/);
 });
 
+test('handles a sparse lower bound when quantile boundaries equal the maximum', () => {
+  const { buildIntensityScale, colorForIntensity } = loadTypescript('src/utils/spatialMetrics.ts');
+  const scale = buildIntensityScale(cellsWithUniqueCounts([5, 100, 100, 100, 100, 100]));
+
+  assert.equal(scale.minimum, 5);
+  assert.equal(scale.maximum, 100);
+  assert.equal(scale.bins.length, 1);
+  assert.equal(scale.bins[0].upperInclusive, null);
+  assert.match(scale.bins[0].label, /5.*100.*within this survey/i);
+  assert.equal(/undefined|NaN/.test(scale.bins[0].label), false);
+  assert.equal(colorForIntensity(scale, 5), scale.bins[0].color);
+  assert.equal(colorForIntensity(scale, 100), scale.bins[0].color);
+});
+
 test('uses collapsed quantile boundaries and numeric labels for fewer bins', () => {
   const { buildIntensityScale } = loadTypescript('src/utils/spatialMetrics.ts');
   const scale = buildIntensityScale(cellsWithUniqueCounts([5, 5, 10, 10, 100]));

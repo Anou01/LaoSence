@@ -78,6 +78,18 @@ export function buildIntensityScale(cells: GridCell[]): IntensityScale {
     .map((quantile) => values[Math.ceil(quantile * values.length) - 1])
     .filter((value, index, boundaries): value is number =>
       value < maximum && boundaries.indexOf(value) === index);
+  if (quantileBoundaries.length === 0) {
+    return {
+      minimum,
+      maximum,
+      bins: [{
+        upperInclusive: null,
+        label: `${formatValue(minimum)}\u2013${formatValue(maximum)} within this survey`,
+        color: colorForBin(0, 1),
+      }],
+    };
+  }
+
   const binCount = quantileBoundaries.length + 1;
   const labels = binCount === QUALITATIVE_LABELS.length ? QUALITATIVE_LABELS : null;
   const bins: IntensityBin[] = quantileBoundaries.map((upperInclusive, index) => ({

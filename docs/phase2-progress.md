@@ -156,4 +156,28 @@ Remaining issue: none for Task 4.
 
 Remaining issue: browser rendering/interaction verification must be rerun in an environment with Playwright or an available browser surface.
 
-Next task: **Task 6**. Do not start it in the Task 5 turn.
+## Task 5 fix - sparse intensity boundary handling
+
+- Status: complete with sparse-boundary fix; browser verification remains unavailable in this environment
+- Branch: `laosence-phase2-spatial-intelligence`
+- Base SHA: `932c03296a9da6feda55f1209578e30ecdee8f06`
+- Commit message: `fix: handle sparse grid intensity boundaries`
+- Scoped files: `src/utils/spatialMetrics.ts`, `tests/spatial-ui.test.cjs`, `docs/phase2-progress.md`
+- Regression: added coverage for unique-network counts `[5, 100, 100, 100, 100, 100]`; the new test reproduced the previous `formatValue(undefined)` crash before the implementation change.
+- Fix behavior: when all quantile boundaries collapse to the maximum while the minimum differs, the scale returns one defined bin with the observed range label `5–100 within this survey`. Both endpoints resolve to that bin's color, and labels contain no `undefined` or `NaN`.
+- Browser check: still not verified because the required Python Playwright package is unavailable and CUA reports no browser surface. Browser rendering and interaction are not claimed as verified.
+- Raw CSV files: retained; no raw data was removed or modified. No push performed.
+
+### Task 5 fix checks
+
+| Command | Exit | Result |
+|---|---:|---|
+| `node --test tests/spatial-ui.test.cjs` | 0 | 11 tests passed; 0 failed, 0 skipped, 0 todo. |
+| `npm.cmd test` | 0 | 41 tests passed; 0 failed, 0 skipped, 0 todo. |
+| `npm.cmd run build` | 0 | Passed. Existing Vite warning remains: the main JS chunk is larger than 500 kB after minification. |
+| `npm.cmd run lint` | 0 | Passed with no lint output. |
+| `git diff --check` | 0 | Passed. |
+
+Remaining issue: browser rendering/interaction verification remains unavailable until an environment provides Playwright or a browser surface.
+
+Next task: **Task 6**. Do not start it in the Task 5 fix turn.
