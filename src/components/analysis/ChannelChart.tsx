@@ -22,7 +22,7 @@ import { getChannelDistribution } from "@/utils/analysisUtils";
 
 const chartConfig = {
   count: {
-    label: "Count",
+    label: "Observations",
     color: "var(--chart-1)",
   },
 } satisfies ChartConfig;
@@ -81,7 +81,7 @@ export function ChannelChart() {
                 <ChartTooltipContent
                   className="w-[120px]"
                   labelFormatter={(value) => `Channel: ${value}`}
-                  formatter={(value) => [value, "Count"]}
+                  formatter={(value) => [value, "Observations"]}
                 />
               }
             />

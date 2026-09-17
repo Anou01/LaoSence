@@ -17,7 +17,7 @@ export const getAuthenticationDistribution = (data: WiFiData[]) =>
 
 export const getEncryptionDistribution = (data: WiFiData[]) =>
   distribution(data.map(row => row.encryption || 'Unknown'), 'browser')
-    .map(row => ({ browser: String(row.browser), visitors: row.count }));
+    .map(row => ({ browser: String(row.browser), observations: row.count }));
 
 export const getRadioTypeDistribution = (data: WiFiData[]) =>
   distribution(data.map(row => row.radioType || 'Unknown'), 'radioType') as { radioType: string; count: number }[];

@@ -25,7 +25,7 @@ import { Bar, BarChart, CartesianGrid, XAxis, YAxis } from "recharts";
 
 const signalChartConfig = {
   count: {
-    label: "Count",
+    label: "Observations",
     color: "var(--chart-1)",
   },
 } satisfies ChartConfigSig;
@@ -82,7 +82,7 @@ export function SignalStrengthChart() {
                 <ChartTooltipContentSig
                   className="w-[150px]"
                   labelFormatter={(value) => `Signal: ${value}`}
-                  formatter={(value) => [value, "Networks"]}
+                  formatter={(value) => [value, "Observations"]}
                 />
               }
             />

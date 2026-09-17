@@ -15,7 +15,7 @@ export function EncryptionTypeChart() {
       {loading ? 'Loading…' : data.length === 0 ? 'No encryption data' :
         <ResponsiveContainer width="100%" height="100%">
           <PieChart>
-            <Pie data={data} dataKey="visitors" nameKey="browser" innerRadius={55} outerRadius={85}>
+            <Pie data={data} dataKey="observations" nameKey="browser" innerRadius={55} outerRadius={85}>
               {data.map((item, index) => <Cell key={item.browser} fill={colors[index % colors.length]} />)}
             </Pie>
             <Tooltip /><Legend />

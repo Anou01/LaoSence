@@ -62,6 +62,16 @@ test('uses recorded dBm, frequency, authentication, and top channels', () => {
   assert.deepEqual(analysis.getChannelDistribution(data, 1), [{ bin: '36', count: 2 }]);
 });
 
+test('encryption distribution reports observation counts', () => {
+  const { getEncryptionDistribution } = loadTypescript('src/utils/analysisUtils.ts');
+  assert.deepEqual(getEncryptionDistribution([
+    { encryption: 'CCMP' }, { encryption: 'CCMP' }, { encryption: 'TKIP' },
+  ]), [
+    { browser: 'CCMP', observations: 2 },
+    { browser: 'TKIP', observations: 1 },
+  ]);
+});
+
 test('loads the primary survey as observations with measured signals', async () => {
   const { loadCSVFromPath } = loadTypescript('src/utils/csvParser.ts');
   const { getObservationMetrics } = loadTypescript('src/utils/analysisUtils.ts');

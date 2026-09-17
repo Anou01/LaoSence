@@ -14,7 +14,7 @@ export function FrequencyChart() {
         <ResponsiveContainer width="100%" height="100%">
           <BarChart data={data} margin={{ left: 8, right: 8 }}>
             <CartesianGrid strokeDasharray="3 3" />
-            <XAxis dataKey="band" /><YAxis /><Tooltip />
+            <XAxis dataKey="band" /><YAxis /><Tooltip formatter={(value) => [value, 'Observations']} />
             <Bar dataKey="count" fill="#2563eb" />
           </BarChart>
         </ResponsiveContainer>}

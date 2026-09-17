@@ -15,7 +15,7 @@ export function RadioTypesChart() {
           <BarChart data={data} margin={{ left: 8, right: 8, bottom: 16 }}>
             <CartesianGrid strokeDasharray="3 3" />
             <XAxis dataKey="radioType" angle={-25} textAnchor="end" height={55} />
-            <YAxis /><Tooltip /><Bar dataKey="count" fill="#0d9488" />
+            <YAxis /><Tooltip formatter={(value) => [value, 'Observations']} /><Bar dataKey="count" fill="#0d9488" />
           </BarChart>
         </ResponsiveContainer>}
     </CardContent>
