@@ -56,6 +56,23 @@ function responseFor(value) {
   };
 }
 
+function cellsWithUniqueCounts(values) {
+  return values.map((uniqueNetworkCount, index) => ({
+    cellId: `8000_${43000 + index}`,
+    row: 8000,
+    col: 43000 + index,
+    bounds: { south: 18, west: 102, north: 18.01, east: 102.01 },
+    center: { lat: 18.005, lng: 102.005 },
+    observationCount: uniqueNetworkCount,
+    uniqueNetworkCount,
+    medianSignalDbm: -60,
+    bandCounts: { '2.4GHz': uniqueNetworkCount, '5GHz': 0, otherUnknown: 0 },
+    authenticationCounts: { Open: uniqueNetworkCount },
+    encryptionCounts: { CCMP: uniqueNetworkCount },
+    topChannels: [],
+  }));
+}
+
 function documentForUrl(documents, url) {
   if (url === AGGREGATE_URLS[0]) return documents.grid;
   if (url === AGGREGATE_URLS[1]) return documents.presets;
@@ -74,6 +91,68 @@ test('known band shares match offline denominator semantics', () => {
     twoPointFour: null,
     five: null,
   });
+});
+
+test('maps spatial metrics and keeps unknown values explicit', () => {
+  const { metricValue } = loadTypescript('src/utils/spatialMetrics.ts');
+  const metrics = {
+    observationCount: 8,
+    uniqueNetworkCount: 5,
+    medianSignalDbm: -72,
+    bandCounts: { '2.4GHz': 2, '5GHz': 6, otherUnknown: 4 },
+    authenticationCounts: {},
+    encryptionCounts: {},
+    topChannels: [],
+  };
+
+  assert.equal(metricValue(metrics, 'infrastructure'), 5);
+  assert.equal(metricValue(metrics, 'fiveGhzShare'), 0.75);
+  assert.equal(metricValue(metrics, 'medianSignal'), -72);
+  assert.equal(metricValue({ ...metrics, medianSignalDbm: null }, 'medianSignal'), null);
+  assert.equal(metricValue({ ...metrics, bandCounts: { '2.4GHz': 0, '5GHz': 0, otherUnknown: 8 } }, 'fiveGhzShare'), null);
+});
+
+test('builds an honest empty intensity scale', () => {
+  const { buildIntensityScale } = loadTypescript('src/utils/spatialMetrics.ts');
+
+  assert.deepEqual(buildIntensityScale([]), {
+    minimum: null,
+    maximum: null,
+    bins: [],
+  });
+});
+
+test('collapses an all-equal intensity scale to one observed bin', () => {
+  const { buildIntensityScale } = loadTypescript('src/utils/spatialMetrics.ts');
+  const scale = buildIntensityScale(cellsWithUniqueCounts([5, 5, 5, 5]));
+
+  assert.equal(scale.minimum, 5);
+  assert.equal(scale.maximum, 5);
+  assert.equal(scale.bins.length, 1);
+  assert.equal(scale.bins[0].upperInclusive, 5);
+  assert.match(scale.bins[0].label, /5/);
+});
+
+test('uses collapsed quantile boundaries and numeric labels for fewer bins', () => {
+  const { buildIntensityScale } = loadTypescript('src/utils/spatialMetrics.ts');
+  const scale = buildIntensityScale(cellsWithUniqueCounts([5, 5, 10, 10, 100]));
+
+  assert.deepEqual(scale.bins.map((bin) => bin.upperInclusive), [5, 10, null]);
+  assert.equal(scale.bins.every((bin) => /within this survey/i.test(bin.label)), true);
+  assert.equal(scale.bins.some((bin) => /Very Low|Low|Medium|High|Very High/.test(bin.label)), false);
+});
+
+test('keeps exact quantile boundaries in the lower bin and uses five-level labels', () => {
+  const { buildIntensityScale, colorForIntensity } = loadTypescript('src/utils/spatialMetrics.ts');
+  const scale = buildIntensityScale(cellsWithUniqueCounts([5, 10, 15, 20, 25]));
+
+  assert.deepEqual(scale.bins.map((bin) => bin.upperInclusive), [5, 10, 15, 20, null]);
+  assert.deepEqual(scale.bins.map((bin) => bin.label), [
+    'Very Low', 'Low', 'Medium', 'High', 'Very High',
+  ]);
+  assert.equal(colorForIntensity(scale, 5), scale.bins[0].color);
+  assert.equal(colorForIntensity(scale, 10), scale.bins[1].color);
+  assert.equal(colorForIntensity(scale, 25), scale.bins[4].color);
 });
 
 test('loads exactly the three validated aggregate documents', async () => {

@@ -130,4 +130,30 @@ Remaining issue: none for Task 3.
 
 Remaining issue: none for Task 4.
 
-Next task: **Task 5**. Do not start it in the Task 4 turn.
+## Task 5 - Grid map, shared intensity scale, and truthful legend
+
+- Status: implemented; browser verification unavailable in this environment
+- Branch: `laosence-phase2-spatial-intelligence`
+- Base SHA: `bac00b0f43d1ce1ce1fb305dfd061dbb5260507a`
+- Commit message: `feat: add LaoSence grid intelligence map`
+- Scoped files: `src/components/map/GridIntelligenceLayer.tsx`, `src/components/map/GridLegend.tsx`, `src/pages/MapPage.tsx`, `src/utils/spatialMetrics.ts`, `tests/spatial-ui.test.cjs`, `docs/phase2-progress.md`
+- Map behavior: MapPage uses a temporary `SpatialDataProvider` wrapper while the root provider remains unchanged. The map renders aggregate `GridCell` rectangles, defaults to Wireless Infrastructure Intensity, fits the published-cell bounds once, and keeps selection as a cell ID without refetching or resetting the camera.
+- Scale behavior: layer and legend receive the same memoized intensity scale. Quantile boundaries use the specified `Math.ceil(q*n)-1` rule, collapse duplicates, handle empty/all-equal data honestly, and use the fixed five-color palette.
+- Loading/error states: aggregate loading, empty published cells, and Retry error states are visible in MapPage. No preset panel, Compare page, root provider migration, or raw CSV removal was started.
+- Browser check: the required Playwright script could not run because Python `playwright` is not installed. CUA inventory reported no available browser surface, so browser rendering and interaction are not claimed as verified.
+- Raw CSV files: retained; no raw data was removed or modified. No push performed.
+
+### Task 5 checks
+
+| Command | Exit | Result |
+|---|---:|---|
+| `node --test tests/spatial-ui.test.cjs` | 0 | 10 tests passed; 0 failed, 0 skipped, 0 todo. Covers metric mapping, empty/all-equal scales, duplicate quantile boundaries, exact threshold assignment, loader behavior, and retry/dedup. |
+| `npm.cmd test` | 0 | 40 tests passed; 0 failed, 0 skipped, 0 todo. |
+| `npm.cmd run build` | 0 | Passed. Existing Vite warning remains: the main JS chunk is larger than 500 kB after minification. |
+| `npm.cmd run lint` | 0 | Passed with no lint output. |
+| `git diff --check` | 0 | Passed. |
+| `python .../with_server.py ... task5_browser_check.py` | 1 | Blocked before browser actions: `ModuleNotFoundError: No module named 'playwright'`. CUA fallback had no browser surface. |
+
+Remaining issue: browser rendering/interaction verification must be rerun in an environment with Playwright or an available browser surface.
+
+Next task: **Task 6**. Do not start it in the Task 5 turn.
