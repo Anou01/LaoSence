@@ -1,5 +1,5 @@
 import { Rectangle, Tooltip } from 'react-leaflet';
-import type { GridCell, SpatialMetric } from '@/type/spatial';
+import type { GridCell, PresetArea, SpatialMetric } from '@/type/spatial';
 import {
   buildIntensityScale,
   colorForIntensity,
@@ -11,6 +11,7 @@ import {
 interface GridIntelligenceLayerProps {
   cells: GridCell[];
   selectedCellId: string | null;
+  selectedArea: PresetArea | null;
   onSelect: (cell: GridCell) => void;
   metric: SpatialMetric;
   scale?: IntensityScale;
@@ -19,6 +20,7 @@ interface GridIntelligenceLayerProps {
 export function GridIntelligenceLayer({
   cells,
   selectedCellId,
+  selectedArea,
   onSelect,
   metric,
   scale,
@@ -51,6 +53,17 @@ export function GridIntelligenceLayer({
           </Rectangle>
         );
       })}
+      {selectedArea && (
+        <Rectangle
+          key={selectedArea.id}
+          bounds={[
+            [selectedArea.bounds.south, selectedArea.bounds.west],
+            [selectedArea.bounds.north, selectedArea.bounds.east],
+          ]}
+          interactive={false}
+          pathOptions={{ color: '#b45309', weight: 4, fillColor: '#f59e0b', fillOpacity: 0.12, dashArray: '8 5' }}
+        />
+      )}
     </>
   );
 }

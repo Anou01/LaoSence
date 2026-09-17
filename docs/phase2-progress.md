@@ -181,3 +181,32 @@ Remaining issue: browser rendering/interaction verification must be rerun in an 
 Remaining issue: browser rendering/interaction verification remains unavailable until an environment provides Playwright or a browser surface.
 
 Next task: **Task 6**. Do not start it in the Task 5 fix turn.
+
+## Task 6 - Cell panel and deterministic preset controls
+
+- Status: complete for Task 6; browser rendering and interactions verified on production preview.
+- Branch: `laosence-phase2-spatial-intelligence`
+- Base SHA: `47dd6f78768670e54c1084439d51f8b3a34841e1`
+- Commit message: `feat: add preset area intelligence`
+- Scoped files: `src/components/map/AreaIntelligencePanel.tsx`, `src/components/map/PresetAreaControls.tsx`, `src/components/map/GridIntelligenceLayer.tsx`, `src/pages/MapPage.tsx`, `src/utils/areaPresentation.ts`, `tests/spatial-ui.test.cjs`, `docs/phase2-progress.md`.
+- Metrics: clicked cells use their own aggregate record; Area A/B/C use each preset JSON record directly. No cell unique counts are added and no cell medians are averaged. The UI uses Observed network identifiers and Observations, known-band denominators, all-observation advertised-security percentages, explicit unknown-band counts, and factual missing-data labels.
+- Selection: one discriminated cell/preset selection ensures mutual clearing. Preset outline uses the complete 3x3 bounds, including unpublished positions; selecting a preset fits those bounds. Selection does not trigger a data fetch.
+- Accessibility and layout: stable `grid-map`, `area-intelligence`, and `selected-cell-id` test IDs; named map/sidebar regions; Area A/B/C button names and `aria-pressed`; a scrollable panel beneath the usable map on narrow screens.
+- Browser tooling: installed Python Playwright 1.63.0 in the local environment and used installed Chrome with the production preview. The browser script and screenshots are ignored under `artifacts/phase2/` and are not committed.
+- Browser evidence: `/map` at 1280x800 and 375x667. Initial map showed 380 SVG grid paths, a truthful intensity legend, and no Leaflet marker icons. Clicking A, B, C showed JSON identifier, observation, median, band, unknown-band, channel, and published-coverage values; one full-block outline remained visible and fit in the viewport. Clicking visible cell `8013_43458` showed its JSON counts/median, removed the preset outline, and cleared all pressed buttons. Aggregate request count remained exactly three during those selections; no page errors. At 375px width, the Leaflet container was 352px tall and the readable panel sat below the map. Screenshots: `artifacts/phase2/task5-grid-map.png`, `task6-desktop.png`, `task6-narrow.png`.
+- Task 5 browser follow-up: grid rectangle rendering, initial view, legend, and absence of a marker cloud are now browser-verified. This does not claim the later Phase 2 four-route, failure-state, privacy/network, or performance acceptance checks from Task 10.
+- Raw CSV files retained; root provider unchanged; no ComparePage, push, or Task 7 work.
+
+### Task 6 checks
+
+| Command | Exit | Result |
+|---|---:|---|
+| `npm.cmd test` | 0 | 42 passed; 0 failed, 0 skipped, 0 todo. The new test checks JSON preset values, demonstrates Area C cannot be computed from published cell unique-count sums or median averages, and covers null median, unknown band, empty channels, and zero percentages. |
+| `npm.cmd run build` | 0 | Passed. Existing warning remains: main JS chunk is larger than 500 kB after minification. |
+| `npm.cmd run lint` | 0 | Passed with no lint output. |
+| Production preview browser check | 0 | Chrome/Playwright assertions passed for desktop and narrow viewport; three aggregate requests and zero page errors. |
+| `git diff --check` | 0 | Passed. |
+
+Remaining issue: the Compare link points to `/compare`, which is scheduled for Task 7/8 and is not a mounted route yet. Task 10 still owns full error-state and four-route browser acceptance.
+
+Next task: **Task 7**. Do not start it in the Task 6 turn.

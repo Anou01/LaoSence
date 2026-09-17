@@ -26,6 +26,7 @@ function loadTypescript(file) {
   const originalRequire = loaded.require.bind(loaded);
   loaded.require = (specifier) => {
     if (specifier === '@/type/spatial') return loadTypescript('src/type/spatial.ts');
+    if (specifier === '@/utils/spatialMetrics') return loadTypescript('src/utils/spatialMetrics.ts');
     return originalRequire(specifier);
   };
   loaded._compile(compiled, filename);
@@ -91,6 +92,51 @@ test('known band shares match offline denominator semantics', () => {
     twoPointFour: null,
     five: null,
   });
+});
+
+test('area panel values use preset records directly and describe missing measurements', () => {
+  const { areaPresentation } = loadTypescript('src/utils/areaPresentation.ts');
+  const { presets, grid } = readPublicDocuments();
+  for (const area of presets.areas) {
+    const result = areaPresentation(area);
+    assert.equal(result.identifiers, area.uniqueNetworkCount.toLocaleString('en-US'));
+    assert.equal(result.observations, area.observationCount.toLocaleString('en-US'));
+    assert.equal(result.medianSignal, `${area.medianSignalDbm} dBm`);
+    assert.equal(result.unknownBandObservations, area.bandCounts.otherUnknown);
+  }
+  const areaC = presets.areas[2];
+  const publishedInC = grid.cells.filter((cell) => areaC.cellIds.includes(cell.cellId));
+  assert.notEqual(publishedInC.reduce((total, cell) => total + cell.uniqueNetworkCount, 0), areaC.uniqueNetworkCount);
+  assert.notEqual(publishedInC.reduce((total, cell) => total + cell.medianSignalDbm, 0) / publishedInC.length, areaC.medianSignalDbm);
+
+  const missing = {
+    ...presets.areas[0],
+    observationCount: 4,
+    uniqueNetworkCount: 3,
+    medianSignalDbm: null,
+    bandCounts: { '2.4GHz': 0, '5GHz': 0, otherUnknown: 4 },
+    authenticationCounts: { 'Other / Unknown': 4 },
+    topChannels: [],
+  };
+  assert.deepEqual(areaPresentation(missing), {
+    identifiers: '3',
+    observations: '4',
+    medianSignal: 'No recorded data',
+    twoPointFourShare: 'Unknown',
+    fiveShare: 'Unknown',
+    unknownBandObservations: 4,
+    securityMix: [{ label: 'Other / Unknown', observations: 4, percentage: '100%' }],
+    channels: [],
+  });
+
+  const zero = areaPresentation({
+    ...missing,
+    observationCount: 2,
+    bandCounts: { '2.4GHz': 2, '5GHz': 0, otherUnknown: 0 },
+    authenticationCounts: { Open: 0, 'Other / Unknown': 2 },
+  });
+  assert.equal(zero.fiveShare, '0%');
+  assert.equal(zero.securityMix[0].percentage, '0%');
 });
 
 test('maps spatial metrics and keeps unknown values explicit', () => {
