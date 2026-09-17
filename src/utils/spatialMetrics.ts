@@ -1,4 +1,41 @@
-import type { AggregateMetrics, BandCounts, GridCell, PresetArea, SpatialMetric } from '@/type/spatial';
+import type { AggregateMetrics, BandCounts, DatasetSummary, GridCell, PresetArea, SpatialMetric } from '@/type/spatial';
+
+export interface SummaryChartData {
+  authentication: { method: string; count: number }[];
+  encryption: { browser: string; observations: number }[];
+  frequency: { band: string; count: number }[];
+  signal: { bin: string; count: number }[];
+  channel: { bin: string; count: number }[];
+  radio: { radioType: string; count: number }[];
+}
+
+function sortedCounts(counts: Record<string, number>): [string, number][] {
+  return Object.entries(counts).sort(([leftName, left], [rightName, right]) =>
+    right - left || leftName.localeCompare(rightName));
+}
+
+export function summaryChartData(summary: DatasetSummary): SummaryChartData {
+  return {
+    authentication: sortedCounts(summary.authenticationCounts)
+      .map(([method, count]) => ({ method, count })),
+    encryption: sortedCounts(summary.encryptionCounts)
+      .map(([browser, observations]) => ({ browser, observations })),
+    frequency: [
+      { band: '2.4 GHz', count: summary.bandCounts['2.4GHz'] },
+      { band: '5 GHz', count: summary.bandCounts['5GHz'] },
+      { band: 'Other / Unknown', count: summary.bandCounts.otherUnknown },
+    ],
+    signal: summary.signalHistogram
+      .filter(({ observations }) => observations > 0)
+      .map(({ label, observations }) => ({ bin: label, count: observations })),
+    channel: [...summary.topChannels]
+      .sort((left, right) => right.observations - left.observations || left.channel - right.channel)
+      .slice(0, 15)
+      .map(({ channel, observations }) => ({ bin: String(channel), count: observations })),
+    radio: sortedCounts(summary.radioTypeCounts)
+      .map(([radioType, count]) => ({ radioType, count })),
+  };
+}
 
 export interface IntensityBin {
   upperInclusive: number | null;

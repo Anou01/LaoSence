@@ -237,3 +237,30 @@ Next task: **Task 7**. Do not start it in the Task 6 turn.
 Remaining issue: Task 8 must mount `/compare`, link NavBar, and replace the root provider before production-route verification. Task 10 still owns full four-route and failure-state browser acceptance.
 
 Next task: **Task 8**. Do not start it in the Task 7 turn.
+
+## Task 8 - Aggregate data across competition routes
+
+- Status: complete for Task 8; production routes and interactions verified in Chrome against the built preview.
+- Branch: `laosence-phase2-spatial-intelligence`
+- Base SHA: `84b00566a08e5643107b1d50d28291e2f814b214`
+- Commit message: `refactor: use aggregate data throughout competition routes`
+- Scope: `src/main.tsx`, `src/components/NavBar.tsx`, `src/pages/{MapPage,AnalysisPage}.tsx`, mounted admin pages, analysis chart components/adapters, `src/utils/spatialMetrics.ts`, `tests/spatial-ui.test.cjs`, and this checkpoint.
+- Root routing: `SpatialDataProvider` now wraps the app; MapPage no longer creates a temporary provider. `/compare` mounts ComparePage and NavBar links to it. The mounted admin analysis/map screens reuse aggregate pages, while upload retains its controls and links to the aggregate map instead of mounting the raw preview.
+- Analytics: totals, source period, accepted/rejected context, and chart series come from `dataset-summary.json`. Charts accept aggregate count-series props; no synthetic `WiFiData` rows are created. Observation-based count labels and tooltips say Observations. Added regression coverage for summary-to-chart partitions, unknown band, signal histogram, and top-15 channel ordering.
+- Navigation fix: disabling Leaflet zoom animation prevents a delayed zoom-transition callback from throwing after Map unmounts during navigation to Analysis.
+- Production preview: request and page-error listeners were attached before each direct load of `/`, `/map`, `/analysis`, and `/compare`. Each loaded exactly `/data/grid-cells.json`, `/data/preset-areas.json`, and `/data/dataset-summary.json`; none requested `/CSV_FILE/`, `.csv`, or the raw wireless file. No page-breaking errors occurred. On `/`, the browser reported a nonbreaking `favicon.ico` 404.
+- Navigation and interactions: `/` to `/map` to `/analysis` to `/compare` added no wireless-data requests. Compare defaulted to A/B; changing to C/B and C/A blocked duplicate choices and added no request. Returning to Map and selecting preset C then cell `8013_43458` added no request. Map displayed 380 SVG grid paths without marker icons. Analytics showed 32,164 Observations and 25,291 Observed network identifiers, matching the summary JSON; its six chart titles and source/accepted context rendered.
+- Browser artifacts: ignored `artifacts/phase2/task8_browser_check.py` and route screenshots remain local and are not part of the commit.
+- Seven tracked raw CSV paths remain untouched. No push performed. Task 9 has not been started. Task 10 still owns the full failure-state and performance acceptance checks.
+
+### Task 8 checks
+
+| Command | Exit | Result |
+|---|---:|---|
+| `npm.cmd test` | 0 | 49 passed; 0 failed, 0 skipped, 0 todo. |
+| `npm.cmd run build` | 0 | Passed; existing Vite warning remains for a main JS chunk larger than 500 kB. |
+| `npm.cmd run lint` | 0 | Passed. |
+| Production preview browser check | 0 | Four direct routes, client navigation, selectors, map selections, request capture, and zero page errors passed. |
+| `git diff --check` | 0 | Passed. |
+
+Next task: **Task 9**. Do not start it in the Task 8 turn.

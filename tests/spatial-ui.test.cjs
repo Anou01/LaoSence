@@ -262,6 +262,81 @@ test('ComparePage defaults to distinct A/B presets and labels disabled duplicate
   assert.doesNotMatch(html, /Winner|Best Location|business score/i);
 });
 
+test('summary chart adapters preserve observation partitions and source categories', () => {
+  const { summaryChartData } = loadTypescript('src/utils/spatialMetrics.ts');
+  const base = readPublicDocuments().summary;
+  const summary = {
+    ...base,
+    observationCount: 10,
+    authenticationCounts: { Open: 3, OWE: 2, 'WPA2 Personal': 5 },
+    encryptionCounts: { 'Synthetic cipher': 6, 'Other / Unknown': 4 },
+    bandCounts: { '2.4GHz': 6, '5GHz': 3, otherUnknown: 1 },
+    signalHistogram: [
+      { label: 'weak', observations: 4 },
+      { label: 'strong', observations: 6 },
+      { label: 'empty', observations: 0 },
+    ],
+    radioTypeCounts: { 'Synthetic radio': 7, 'Other / Unknown': 3 },
+    topChannels: [
+      { channel: 11, observations: 2 },
+      { channel: 6, observations: 5 },
+      { channel: 1, observations: 3 },
+    ],
+  };
+  const data = summaryChartData(summary);
+  assert.deepEqual(data.authentication, [
+    { method: 'WPA2 Personal', count: 5 },
+    { method: 'Open', count: 3 },
+    { method: 'OWE', count: 2 },
+  ]);
+  assert.deepEqual(data.encryption, [
+    { browser: 'Synthetic cipher', observations: 6 },
+    { browser: 'Other / Unknown', observations: 4 },
+  ]);
+  assert.deepEqual(data.frequency, [
+    { band: '2.4 GHz', count: 6 },
+    { band: '5 GHz', count: 3 },
+    { band: 'Other / Unknown', count: 1 },
+  ]);
+  assert.deepEqual(data.signal, [
+    { bin: 'weak', count: 4 },
+    { bin: 'strong', count: 6 },
+  ]);
+  assert.deepEqual(data.radio, [
+    { radioType: 'Synthetic radio', count: 7 },
+    { radioType: 'Other / Unknown', count: 3 },
+  ]);
+  assert.deepEqual(data.channel, [
+    { bin: '6', count: 5 },
+    { bin: '1', count: 3 },
+    { bin: '11', count: 2 },
+  ]);
+  for (const key of ['authentication', 'encryption', 'frequency', 'signal', 'radio']) {
+    const countKey = key === 'encryption' ? 'observations' : 'count';
+    assert.equal(data[key].reduce((total, row) => total + row[countKey], 0), summary.observationCount);
+  }
+});
+
+test('channel chart adapter selects top fifteen by observations then channel number', () => {
+  const { summaryChartData } = loadTypescript('src/utils/spatialMetrics.ts');
+  const summary = {
+    ...readPublicDocuments().summary,
+    topChannels: Array.from({ length: 17 }, (_, index) => ({
+      channel: 17 - index,
+      observations: index === 0 ? 100 : index === 1 ? 50 : 5,
+    })),
+  };
+  const rows = summaryChartData(summary).channel;
+  assert.equal(rows.length, 15);
+  assert.deepEqual(rows.slice(0, 4), [
+    { bin: '17', count: 100 },
+    { bin: '16', count: 50 },
+    { bin: '1', count: 5 },
+    { bin: '2', count: 5 },
+  ]);
+  assert.equal(rows.at(-1).bin, '13');
+});
+
 test('maps spatial metrics and keeps unknown values explicit', () => {
   const { metricValue } = loadTypescript('src/utils/spatialMetrics.ts');
   const metrics = {

@@ -1,6 +1,5 @@
 "use client";
 
-import * as React from "react";
 import { Bar, BarChart, CartesianGrid, XAxis, YAxis } from "recharts";
 
 import {
@@ -17,8 +16,7 @@ import {
   ChartTooltip,
   ChartTooltipContent,
 } from "@/components/ui/chart";
-import { useWiFiData } from "@/context/WiFiDataContext";
-import { getChannelDistribution } from "@/utils/analysisUtils";
+import type { SummaryChartData } from '@/utils/spatialMetrics';
 
 const chartConfig = {
   count: {
@@ -27,19 +25,12 @@ const chartConfig = {
   },
 } satisfies ChartConfig;
 
-export function ChannelChart() {
-  const { wifiData, loading } = useWiFiData();
-  const chartData = React.useMemo(() => {
-    if (loading || !wifiData.length) return [];
-    return getChannelDistribution(wifiData);
-  }, [wifiData, loading]);
-
-  if (loading) return <Card className="py-0"><CardContent className="p-6">Loading...</CardContent></Card>;
-  if (!chartData.length) return <Card className="py-0"><CardContent className="p-6">No channel data available</CardContent></Card>;
+export function ChannelChart({ data: chartData }: { data: SummaryChartData['channel'] }) {
+  if (chartData.every((row) => row.count === 0)) return <Card className="py-0"><CardContent className="p-6">No recorded data</CardContent></Card>;
   return (
     <Card className="py-0">
       <CardHeader className="flex flex-col items-stretch border-b px-6 py-4">
-        <CardTitle>Most observed channels</CardTitle>
+        <CardTitle>Top 15 channels by Observations</CardTitle>
       </CardHeader>
 
       <CardContent className="px-2 sm:p-6">

@@ -1,6 +1,6 @@
 import { useState } from "react";
+import { Link } from 'react-router-dom';
 
-import MapComponent from "@/components/MapComponent";
 import {
   Select,
   SelectContent,
@@ -170,22 +170,10 @@ export default function AdminUploadPage() {
           </div>
         )}
       </div>
-      {/** Map Component */}
-      <div className="h-screen w-full mt-4">
-        <MapComponent
-          userLocation={null}
-          onLocationUpdate={(location) =>
-            console.log("Upload page location updated:", location)
-          }
-          center={[17.9757, 102.6369]}
-          zoom={7}
-          minZoom={5}
-          maxZoom={18}
-          className="h-full w-full"
-          showLocationButton={true}
-          locationButtonPosition="bottomleft"
-          zoomControlPosition="bottomleft"
-        />
+      <div className="mx-4 mt-4 rounded-lg border bg-white p-4 text-sm text-slate-700">
+        Competition maps use generated aggregate survey data. Open the{' '}
+        <Link to="/map" className="font-semibold text-teal-800 underline underline-offset-2">aggregate Map</Link>{' '}
+        to inspect published grid cells and preset areas.
       </div>
     </div>
   );

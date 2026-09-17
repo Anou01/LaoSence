@@ -1,5 +1,4 @@
 
-import React from "react";
 
 // ========================================
 // src/components/analysis/SignalStrengthChart.tsx
@@ -19,8 +18,7 @@ import {
   ChartTooltip as ChartTooltipSig,
   ChartTooltipContent as ChartTooltipContentSig,
 } from "@/components/ui/chart";
-import { useWiFiData as useWiFiDataSig } from "@/context/WiFiDataContext";
-import { getSignalStrengthHistogram } from "@/utils/analysisUtils";
+import type { SummaryChartData } from '@/utils/spatialMetrics';
 import { Bar, BarChart, CartesianGrid, XAxis, YAxis } from "recharts";
 
 const signalChartConfig = {
@@ -30,14 +28,8 @@ const signalChartConfig = {
   },
 } satisfies ChartConfigSig;
 
-export function SignalStrengthChart() {
-  const { wifiData, loading } = useWiFiDataSig()
-  const chartData = React.useMemo(() => {
-    if (loading || !wifiData.length) return []
-    return getSignalStrengthHistogram(wifiData)
-  }, [wifiData, loading])
-
-  if (loading) return <CardSig className="py-0"><CardContentSig className="p-6">Loading...</CardContentSig></CardSig>
+export function SignalStrengthChart({ data: chartData }: { data: SummaryChartData['signal'] }) {
+  if (chartData.length === 0) return <CardSig className="py-0"><CardContentSig className="p-6">No recorded data</CardContentSig></CardSig>
 
   return (
     <CardSig className="py-0">

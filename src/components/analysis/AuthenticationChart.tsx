@@ -1,7 +1,6 @@
 // src/components/analysis/AuthenticationChart.tsx
 "use client";
 
-import * as React from "react";
 import { Bar, BarChart, CartesianGrid, XAxis, YAxis } from "recharts";
 
 import {
@@ -19,47 +18,19 @@ import {
   ChartTooltip,
   ChartTooltipContent,
 } from "@/components/ui/chart";
-import { useWiFiData } from "@/context/WiFiDataContext";
-import { getAuthenticationDistribution } from "@/utils/analysisUtils";
+import type { SummaryChartData } from '@/utils/spatialMetrics';
 
 const chartConfig = {
   count: {
     label: "Observations",
     color: "#2563eb",
   },
-  Open: {
-    label: "Open",
-    color: "var(--chart-1)",
-  },
-  WPA: {
-    label: "WPA",
-    color: "var(--chart-2)",
-  },
-  WPA2: {
-    label: "WPA2",
-    color: "var(--chart-3)",
-  },
-  WPA3: {
-    label: "WPA3",
-    color: "var(--chart-4)",
-  },
-  WEP: {
-    label: "WEP",
-    color: "var(--chart-5)",
-  },
 } satisfies ChartConfig;
 
-export function AuthenticationMethodsChart() {
-  const { wifiData, loading } = useWiFiData();
-  const chartData = React.useMemo(() => {
-    if (loading || !wifiData.length) return [];
-    return getAuthenticationDistribution(wifiData);
-  }, [wifiData, loading]);
-
+export function AuthenticationMethodsChart({ data: chartData }: { data: SummaryChartData['authentication'] }) {
   const totalCount = chartData.reduce((acc, curr) => acc + curr.count, 0);
 
-  if (loading) return <Card className="py-0"><CardContent className="p-6">Loading...</CardContent></Card>;
-  if (!chartData.length) return <Card className="py-0"><CardContent className="p-6">No authentication data available</CardContent></Card>;
+  if (totalCount === 0) return <Card className="py-0"><CardContent className="p-6">No recorded data</CardContent></Card>;
 
   return (
     <Card className="py-0">
@@ -123,7 +94,7 @@ export function AuthenticationMethodsChart() {
             const percent = ((item.count / totalCount) * 100).toFixed(1);
             return (
               <div key={item.method} className="flex items-center gap-2">
-                <div className={`w-3 h-3 rounded-full bg-chart-${index + 1}`}></div>
+                <div className="h-3 w-3 rounded-full" style={{ backgroundColor: `var(--chart-${index % 5 + 1})` }} />
                 {item.method}: {percent}%
               </div>
             );

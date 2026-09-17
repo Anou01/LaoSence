@@ -3,8 +3,9 @@ import { useState } from 'react';
 import { Menu, X } from 'lucide-react';
 
 const links = [
-  { to: '/', label: 'Map' },
+  { to: '/map', label: 'Map' },
   { to: '/analysis', label: 'Analytics' },
+  { to: '/compare', label: 'Compare' },
 ];
 
 export default function NavBar() {

@@ -7,7 +7,6 @@ import { GridLegend } from '@/components/map/GridLegend';
 import { AreaIntelligencePanel } from '@/components/map/AreaIntelligencePanel';
 import { PresetAreaControls } from '@/components/map/PresetAreaControls';
 import { DatasetLimitations } from '@/components/DatasetLimitations';
-import { SpatialDataProvider } from '@/context/SpatialDataContext';
 import { useSpatialData } from '@/context/spatialContext';
 import { buildIntensityScale } from '@/utils/spatialMetrics';
 import type { GridCell, PresetArea, SpatialMetric } from '@/type/spatial';
@@ -44,7 +43,7 @@ function PresetBoundsFit({ area }: { area: PresetArea | null }) {
 
 type MapSelection = { kind: 'cell'; id: string } | { kind: 'preset'; id: PresetArea['id'] } | null;
 
-function AggregateMap() {
+export default function MapPage() {
   const { gridCells, presetAreas, loading, error, retry } = useSpatialData();
   const [selection, setSelection] = useState<MapSelection>(null);
   const metric = DEFAULT_METRIC;
@@ -87,6 +86,7 @@ function AggregateMap() {
         zoom={12}
         minZoom={5}
         maxZoom={18}
+        zoomAnimation={false}
         zoomControl={false}
         className="h-full w-full"
       >
@@ -167,13 +167,5 @@ function AggregateMap() {
         <div className="mt-5 text-slate-700"><DatasetLimitations /></div>
       </aside>
     </div>
-  );
-}
-
-export default function MapPage() {
-  return (
-    <SpatialDataProvider>
-      <AggregateMap />
-    </SpatialDataProvider>
   );
 }

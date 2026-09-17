@@ -3,6 +3,7 @@ import ReactDOM from "react-dom/client";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import App from "./App";
 import MapPage from "./pages/MapPage";
+import ComparePage from './pages/ComparePage';
 import AboutUsPage from "./pages/AboutUsPage";
 import AnalysisPage from "./pages/AnalysisPage";
 import ContactUs from "./pages/ContactUs";
@@ -15,7 +16,7 @@ import AdminUploadPage from "./pages/admin/AdminUploadPage";
 import AdminAnalysisPage from "./pages/admin/AdminAnalysisPage";
 import AdminMapPage from "./pages/admin/AdminMapPage";
 import Layout from "./layouts/Layout";
-import { WiFiDataProvider } from "./context/WiFiDataContext";
+import { SpatialDataProvider } from './context/SpatialDataContext';
 import "./index.css";
 
 // You'll need to create these components for the nested routes when uncommented
@@ -26,12 +27,13 @@ import MessagingPage from "./pages/admin/MessagingPage";
 ReactDOM.createRoot(document.getElementById("root")!).render(
   <React.StrictMode>
     <BrowserRouter>
-      <WiFiDataProvider>
+      <SpatialDataProvider>
       <Layout>
         <Routes>
           {/* Public Routes */}
           <Route path="/" element={<App />} />
           <Route path="/map" element={<MapPage />} />
+          <Route path="/compare" element={<ComparePage />} />
           <Route path="/about" element={<AboutUsPage />} />
           <Route path="/analysis" element={<AnalysisPage />} />
           <Route path="/game" element={<WardrivingGamePage />} />
@@ -64,11 +66,11 @@ ReactDOM.createRoot(document.getElementById("root")!).render(
             <Route path="process/merge" element={<ProcessMerge />} /> */}
 
             {/* Messaging system - admin communication features */}
-            <Route path="messaging" element={<MessagingPage />} />q
+            <Route path="messaging" element={<MessagingPage />} />
           </Route>
         </Routes>
       </Layout>
-      </WiFiDataProvider>
+      </SpatialDataProvider>
     </BrowserRouter>
   </React.StrictMode>
 );
