@@ -1,69 +1,7 @@
-import { Rectangle, Tooltip } from 'react-leaflet';
-import type { GridCell, PresetArea, SpatialMetric } from '@/type/spatial';
-import {
-  buildIntensityScale,
-  colorForIntensity,
-  metricValue,
-  type IntensityScale,
-  NO_DATA_COLOR,
-} from '@/utils/spatialMetrics';
-
-interface GridIntelligenceLayerProps {
-  cells: GridCell[];
-  selectedCellId: string | null;
-  selectedArea: PresetArea | null;
-  onSelect: (cell: GridCell) => void;
-  metric: SpatialMetric;
-  scale?: IntensityScale;
-}
-
-export function GridIntelligenceLayer({
-  cells,
-  selectedCellId,
-  selectedArea,
-  onSelect,
-  metric,
-  scale,
-}: GridIntelligenceLayerProps) {
-  const intensityScale = scale ?? buildIntensityScale(cells);
-
-  return (
-    <>
-      {cells.map((cell) => {
-        const selected = cell.cellId === selectedCellId;
-        const color = colorForIntensity(intensityScale, metricValue(cell, metric));
-        return (
-          <Rectangle
-            key={cell.cellId}
-            bounds={[
-              [cell.bounds.south, cell.bounds.west],
-              [cell.bounds.north, cell.bounds.east],
-            ]}
-            pathOptions={{
-              color: selected ? '#0f172a' : '#ffffff',
-              weight: selected ? 3 : 1,
-              fillColor: color,
-              fillOpacity: color === NO_DATA_COLOR ? 0.45 : 0.65,
-            }}
-            eventHandlers={{ click: () => onSelect(cell) }}
-          >
-            <Tooltip>
-              Cell {cell.cellId}: {cell.uniqueNetworkCount} observed network identifiers
-            </Tooltip>
-          </Rectangle>
-        );
-      })}
-      {selectedArea && (
-        <Rectangle
-          key={selectedArea.id}
-          bounds={[
-            [selectedArea.bounds.south, selectedArea.bounds.west],
-            [selectedArea.bounds.north, selectedArea.bounds.east],
-          ]}
-          interactive={false}
-          pathOptions={{ color: '#b45309', weight: 4, fillColor: '#f59e0b', fillOpacity: 0.12, dashArray: '8 5' }}
-        />
-      )}
-    </>
-  );
+/**
+ * @deprecated This component is no longer used. MapPage now renders grid cells
+ * directly via MapLibre GL fill-extrusion layers.
+ */
+export function GridIntelligenceLayer() {
+  return null;
 }

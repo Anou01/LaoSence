@@ -94,6 +94,8 @@ export interface SpatialData {
   datasetSummary: DatasetSummary;
 }
 
+import type { WiFiData } from '@/type/wifi';
+
 export interface SpatialDataState {
   gridCells: GridCell[];
   presetAreas: PresetArea[];
@@ -101,4 +103,5 @@ export interface SpatialDataState {
   loading: boolean;
   error: string | null;
   retry: () => void;
+  rawData?: WiFiData[];
 }

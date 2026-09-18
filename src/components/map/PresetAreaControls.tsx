@@ -8,21 +8,25 @@ interface PresetAreaControlsProps {
 
 export function PresetAreaControls({ areas, selectedId, onSelect }: PresetAreaControlsProps) {
   return (
-    <section aria-label="Preset areas">
-      <h2 className="text-sm font-semibold text-slate-900">Preset areas</h2>
-      <div className="mt-2 grid grid-cols-3 gap-2">
-        {areas.map((area) => (
+    <div className="flex items-center gap-2">
+      {areas.map((area) => {
+        const selected = selectedId === area.id;
+        return (
           <button
             key={area.id}
             type="button"
-            aria-pressed={selectedId === area.id}
+            aria-pressed={selected}
             onClick={() => onSelect(area)}
-            className={`min-h-11 rounded-lg px-2 text-sm font-semibold focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-teal-700 ${selectedId === area.id ? 'bg-teal-800 text-white' : 'bg-slate-100 text-slate-800 hover:bg-slate-200'}`}
+            className={`rounded-full px-3.5 py-1.5 text-xs font-semibold shadow-sm transition-all duration-200 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-teal-700 ${
+              selected
+                ? 'bg-primary text-white shadow-md'
+                : 'bg-white text-slate-700 hover:bg-slate-50 hover:shadow-md'
+            }`}
           >
             {area.name}
           </button>
-        ))}
-      </div>
-    </section>
+        );
+      })}
+    </div>
   );
 }

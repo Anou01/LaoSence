@@ -4,14 +4,15 @@ import path from 'path'
 import tailwindcss from '@tailwindcss/vite'
 
 // https://vite.dev/config/
-// allow bcf1d4b5d210.ngrok-free.app
 export default defineConfig({
   plugins: [react(), tailwindcss()],
   resolve: {
     alias: {
       "@": path.resolve(__dirname, "./src"),
     },
-
+  },
+  optimizeDeps: {
+    exclude: ['maplibre-gl'],
   },
   server: {
     host: true,
@@ -20,4 +21,4 @@ export default defineConfig({
       "15bb7fa2372c.ngrok-free.app"
     ]
   }
-})
+})

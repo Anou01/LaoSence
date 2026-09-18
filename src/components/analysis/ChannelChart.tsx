@@ -1,91 +1,33 @@
 "use client";
 
-import { Bar, BarChart, CartesianGrid, XAxis, YAxis } from "recharts";
-
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import type {
-  ChartConfig,
-} from "@/components/ui/chart";
-import {
-  ChartContainer,
-  ChartTooltip,
-  ChartTooltipContent,
-} from "@/components/ui/chart";
+import { Bar, BarChart, CartesianGrid, XAxis, YAxis, ResponsiveContainer, Tooltip } from "recharts";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import type { SummaryChartData } from '@/utils/spatialMetrics';
 
-const chartConfig = {
-  count: {
-    label: "Observations",
-    color: "var(--chart-1)",
-  },
-} satisfies ChartConfig;
-
 export function ChannelChart({ data: chartData }: { data: SummaryChartData['channel'] }) {
-  if (chartData.every((row) => row.count === 0)) return <Card className="py-0"><CardContent className="p-6">No recorded data</CardContent></Card>;
+  if (chartData.every((r) => r.count === 0)) return <Card><CardContent className="p-6">No recorded data</CardContent></Card>;
+
+  const total = chartData.reduce((s, d) => s + d.count, 0);
+  const pctData = chartData.slice(0, 10).map((d) => ({
+    ...d,
+    pct: total > 0 ? Number(((d.count / total) * 100).toFixed(1)) : 0,
+  }));
+
   return (
     <Card className="py-0">
-      <CardHeader className="flex flex-col items-stretch border-b px-6 py-4">
-        <CardTitle>Top 15 channels by Observations</CardTitle>
+      <CardHeader className="border-b px-5 py-3">
+        <CardTitle className="text-sm">Top Observed Channels</CardTitle>
       </CardHeader>
-
-      <CardContent className="px-2 sm:p-6">
-        <ChartContainer
-          config={chartConfig}
-          className="aspect-auto h-[400px] w-full"
-        >
-          <BarChart
-            accessibilityLayer
-            data={chartData}
-            margin={{
-              left: 12,
-              right: 12,
-              top: 20,
-              bottom: 20,
-            }}
-          >
-            <CartesianGrid strokeDasharray="2 2" stroke="#e0e0e0" />
-
-            <XAxis
-              dataKey="bin"
-              tickLine={false}
-              axisLine={true}
-              tickMargin={8}
-              stroke="#666"
-              fontSize={12}
-            />
-
-            <YAxis
-              tickLine={false}
-              axisLine={true}
-              tickMargin={8}
-              stroke="#666"
-              fontSize={12}
-            />
-
-            <ChartTooltip
-              content={
-                <ChartTooltipContent
-                  className="w-[120px]"
-                  labelFormatter={(value) => `Channel: ${value}`}
-                  formatter={(value) => [value, "Observations"]}
-                />
-              }
-            />
-
-            <Bar
-              dataKey="count"
-              fill="var(--color-count)"
-              stroke="var(--color-count)"
-              strokeWidth={1}
-              radius={0}
-            />
+      <CardContent className="px-3 py-4">
+        <ResponsiveContainer width="100%" height={200}>
+          <BarChart data={pctData} margin={{ left: 0, right: 8, top: 8, bottom: 4 }}>
+            <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" vertical={false} />
+            <XAxis dataKey="bin" tickLine={false} axisLine={false} fontSize={10} tick={{ fill: '#64748b' }} />
+            <YAxis tickLine={false} axisLine={false} fontSize={10} tick={{ fill: '#64748b' }} tickFormatter={(v) => `${v}%`} width={36} />
+            <Tooltip formatter={(value: number) => [`${value}%`, 'Share']} contentStyle={{ fontSize: 12, borderRadius: 8 }} />
+            <Bar dataKey="pct" fill="#14b8a6" radius={[3, 3, 0, 0]} />
           </BarChart>
-        </ChartContainer>
+        </ResponsiveContainer>
       </CardContent>
     </Card>
   );

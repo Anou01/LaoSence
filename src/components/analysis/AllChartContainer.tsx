@@ -1,4 +1,4 @@
-﻿"use client"
+"use client"
 
 import { useMemo } from 'react';
 import type { DatasetSummary } from '@/type/spatial';
@@ -13,12 +13,12 @@ import { RadioTypesChart } from "./RadioTypesChart"
 export default function AllChartContainer({ summary }: { summary: DatasetSummary }) {
   const data = useMemo(() => summaryChartData(summary), [summary]);
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 p-4 md:p-8">
+    <div className="mt-5 grid grid-cols-1 gap-4 md:grid-cols-2">
       <FrequencyChart data={data.frequency} />
-      <EncryptionTypeChart data={data.encryption} />
-      <ChannelChart data={data.channel} />
-      <SignalStrengthChart data={data.signal} />
       <AuthenticationMethodsChart data={data.authentication} />
+      <EncryptionTypeChart data={data.encryption} />
+      <SignalStrengthChart data={data.signal} />
+      <ChannelChart data={data.channel} />
       <RadioTypesChart data={data.radio} />
     </div>
   )

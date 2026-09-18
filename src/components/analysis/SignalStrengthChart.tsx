@@ -1,93 +1,34 @@
+"use client";
 
-
-// ========================================
-// src/components/analysis/SignalStrengthChart.tsx
-// ========================================
-
-import {
-  Card as CardSig,
-  CardContent as CardContentSig,
-  CardHeader as CardHeaderSig,
-  CardTitle as CardTitleSig,
-} from "@/components/ui/card";
-import type {
-  ChartConfig as ChartConfigSig,
-} from "@/components/ui/chart";
-import {
-  ChartContainer as ChartContainerSig,
-  ChartTooltip as ChartTooltipSig,
-  ChartTooltipContent as ChartTooltipContentSig,
-} from "@/components/ui/chart";
+import { Bar, BarChart, CartesianGrid, XAxis, YAxis, ResponsiveContainer, Tooltip } from "recharts";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import type { SummaryChartData } from '@/utils/spatialMetrics';
-import { Bar, BarChart, CartesianGrid, XAxis, YAxis } from "recharts";
-
-const signalChartConfig = {
-  count: {
-    label: "Observations",
-    color: "var(--chart-1)",
-  },
-} satisfies ChartConfigSig;
 
 export function SignalStrengthChart({ data: chartData }: { data: SummaryChartData['signal'] }) {
-  if (chartData.length === 0) return <CardSig className="py-0"><CardContentSig className="p-6">No recorded data</CardContentSig></CardSig>
+  if (chartData.length === 0) return <Card><CardContent className="p-6">No recorded data</CardContent></Card>;
+
+  const total = chartData.reduce((s, d) => s + d.count, 0);
+  const pctData = chartData.map((d) => ({
+    ...d,
+    pct: total > 0 ? Number(((d.count / total) * 100).toFixed(1)) : 0,
+  }));
 
   return (
-    <CardSig className="py-0">
-      <CardHeaderSig className="flex flex-col items-stretch border-b px-6 py-4">
-        <div className="flex flex-1 flex-col justify-center gap-1">
-          <CardTitleSig>Recorded signal (dBm)</CardTitleSig>
-        </div>
-      </CardHeaderSig>
-      <CardContentSig className="px-2 sm:p-6">
-        <ChartContainerSig
-          config={signalChartConfig}
-          className="aspect-auto h-[400px] w-full"
-        >
-          <BarChart
-            accessibilityLayer
-            data={chartData}
-            margin={{
-              left: 12,
-              right: 12,
-              top: 20,
-              bottom: 20,
-            }}
-          >
-            <CartesianGrid strokeDasharray="2 2" stroke="#e0e0e0" />
-            <XAxis
-              dataKey="bin"
-              tickLine={false}
-              axisLine={true}
-              tickMargin={8}
-              stroke="#666"
-              fontSize={12}
-            />
-            <YAxis
-              tickLine={false}
-              axisLine={true}
-              tickMargin={8}
-              stroke="#666"
-              fontSize={12}
-            />
-            <ChartTooltipSig
-              content={
-                <ChartTooltipContentSig
-                  className="w-[150px]"
-                  labelFormatter={(value) => `Signal: ${value}`}
-                  formatter={(value) => [value, "Observations"]}
-                />
-              }
-            />
-            <Bar
-              dataKey="count"
-              fill="var(--color-count)"
-              stroke="var(--color-count)"
-              strokeWidth={1}
-              radius={0}
-            />
+    <Card className="py-0">
+      <CardHeader className="border-b px-5 py-3">
+        <CardTitle className="text-sm">Signal Strength Distribution</CardTitle>
+      </CardHeader>
+      <CardContent className="px-3 py-4">
+        <ResponsiveContainer width="100%" height={200}>
+          <BarChart data={pctData} margin={{ left: 0, right: 8, top: 8, bottom: 4 }}>
+            <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" vertical={false} />
+            <XAxis dataKey="bin" tickLine={false} axisLine={false} fontSize={9} tick={{ fill: '#64748b' }} interval={0} angle={-20} textAnchor="end" height={40} />
+            <YAxis tickLine={false} axisLine={false} fontSize={10} tick={{ fill: '#64748b' }} tickFormatter={(v) => `${v}%`} width={36} />
+            <Tooltip formatter={(value: number) => [`${value}%`, 'Share']} contentStyle={{ fontSize: 12, borderRadius: 8 }} />
+            <Bar dataKey="pct" fill="#0d9488" radius={[3, 3, 0, 0]} />
           </BarChart>
-        </ChartContainerSig>
-      </CardContentSig>
-    </CardSig>
-  )
+        </ResponsiveContainer>
+      </CardContent>
+    </Card>
+  );
 }
