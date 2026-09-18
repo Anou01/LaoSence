@@ -353,3 +353,12 @@ Next task: **Task 11**. Do not start it in the Task 10 turn.
 | `git diff --check` | 0 | Passed. |
 
 Next task: **Task 12** acceptance audit and report. Do not start it in the Task 11 turn.
+
+## Task 12 — Final acceptance audit and handoff report
+
+- Status: documentation-only final audit completed against starting HEAD `310e77cbb7ffc329bc3e09fd0accf8fcfbf109e6` on `laosence-phase2-spatial-intelligence`. See `docs/phase2-final-report.md` for all 19 acceptance rows, 22 required handoff items, BEFORE → AFTER, and evidence/limitation separation. The report's containing commit SHA is given in the handoff response rather than embedded in itself.
+- Scoped files: new `docs/phase2-final-report.md` and this checkpoint only. No source, dependency, aggregate, private input, or screenshot change; no installation, test, build, lint, or browser run was repeated for this documentation-only task.
+- Read-only Task 12 checks: starting Git HEAD and clean status confirmed; baseline-to-HEAD commit/file inventory reviewed; current aggregate JSON values and SHA-256 hashes confirmed against Task 11; seven removed raw paths absent from tracked former CSV folders; four ignored screenshot paths present. `git diff --check` passed before commit.
+- Task 11 evidence retained verbatim in the report: clean-snapshot `npm ci` passed; main-checkout `npm ci` failed with `EPERM` and was repaired before passing test/build/lint; suite counts 5/25/19, `npm test` 49/49; 18 advisories and inherited bundle warning; clean-build four-route preview and privacy/geometry validation. These are prior-task results, not newly run Task 12 commands.
+- Open limitations: historical raw-data exposure may persist in Git history or prior copies; suppression is not an anonymity guarantee; missing favicon 404, external map tiles, dependency advisories, and bundle warning remain. Optional map metric selector was deferred. Hosted production was not verified.
+- No push, merge, deployment, history rewrite, or Phase 3 work. Phase 2 stops after this Task 12 documentation commit; no next task is started.
