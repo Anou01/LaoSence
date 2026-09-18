@@ -320,3 +320,36 @@ Next task: **Task 10**. Do not start it in the Task 9 turn.
 | `git diff --check` | 0 | Passed. |
 
 Next task: **Task 11**. Do not start it in the Task 10 turn.
+
+## Task 11 - Fresh verification and privacy audit
+
+- Status: Task 11 checks completed against commit `2922be934088d3dc9bc11e7174fc8b993417389a`, with an explicit Windows file-lock caveat for `npm ci` in the working checkout. A clean ignored snapshot of that exact HEAD passed the full planned command sequence; the working checkout was repaired and passed test/build/lint afterward. This is not the Phase 2 final acceptance report (Task 12).
+- Branch: `laosence-phase2-spatial-intelligence`; no production source, lockfile, or aggregate JSON changed. This checkpoint is the only file to commit.
+- Install caveat: initial `npm.cmd ci` in the working checkout exited 1 (`EPERM` unlinking the lightningcss native module). Inspection found multiple pre-existing Vite dev/preview processes holding that module; these were not all owned by this session, so they were not broadly terminated. The interrupted install removed some packages, and `npm.cmd test` temporarily failed with missing `typescript`/`papaparse`. A normal `npm.cmd install --no-audit --no-fund` repaired the checkout (exit 0), though npm reported cleanup warnings for locked native-module staging directories. Fresh test/build/lint in the working checkout then passed. No force flags were used.
+- Clean install: an ignored, clean export of the exact starting HEAD had no `node_modules`; `npm.cmd ci` exited 0 there, adding 415 packages. npm reported 18 dependency advisories: 1 low, 3 moderate, 13 high, 1 critical. No dependency upgrade or lockfile change was made within Task 11.
+- Fresh clean-snapshot sequence: build and lint exited 0; Wi-Fi 5/5, spatial 25/25, spatial-ui 19/19, and full `npm.cmd test` 49/49 passed, all with 0 failed and 0 skipped. The rebuilt main checkout also passed `npm.cmd test` 49/49, build, and lint. Both builds retained the inherited main-JS chunk warning above 500 kB.
+- Regeneration: the available ignored private Chanthabuly input was regenerated into an ignored verification directory, yielding 32,165 input / 32,164 accepted / 1 rejected observations, 380 published and 39 suppressed cells, and deterministic nonoverlapping longitude-thirds A/B/C presets. SHA-256 of each regenerated JSON exactly matched the checked-in `public/data` file: grid `3024F10AFF22216EA3512E9A8C429036D0F1658945D1BA6D2411C08527D78E2D`; presets `F40151332A5CAF42D5E95609305AE8EB1F5364588CC5293DECF636F048F4F9A8`; summary `5E4E7A1FCFAC59B46B0B19BF1200DFD2E12519DC440263481C7DCA2BA2D703D9`.
+- Privacy: `validatePublicOutputs()` passed for checked-in `public/data`, freshly rebuilt main `dist/data`, clean-snapshot `dist/data`, and regenerated verification JSON. Its schema allowlists and private-field/MAC checks rejected raw-row structures; lattice geometry, cell suppression threshold, three 3x3 dimensions, and 27 distinct preset cell IDs were confirmed. Recursive source/build inventory found zero raw wireless CSV in `public/`, `src/assets/`, main `dist/`, or clean-snapshot `dist/`; `git ls-tree` for both original CSV directories was empty at the starting HEAD.
+- Build-copy hash nuance: main `dist/data` matched checked-in JSON byte-for-byte after its fresh build. Extracting the clean HEAD snapshot on this Windows environment changed JSON line endings to CRLF, and its `dist/data` copied those CRLF files; those three raw SHA-256 values therefore differed, while LF-normalized bytes matched the checked-in files and parsed JSON and privacy validation were identical. This is not claimed as a raw-byte match for the snapshot `dist/`.
+- Fresh preview: the clean-snapshot production build was served on a separate local port without touching other running servers. Direct `/`, `/map`, `/analysis`, and `/compare` each requested only `/data/grid-cells.json`, `/data/preset-areas.json`, and `/data/dataset-summary.json` as wireless data, with zero raw CSV requests and zero page errors. Client navigation and Map A/B/C/cell and Compare C/B then C/A selections added no wireless-data fetches. The browser verified 380 rectangles, exact JSON panel values, Analytics totals and six Observations tooltips, Compare panels/interpretation, 500/malformed/empty-grid Retry recovery, and null-median/unknown-band/empty-channel messages. The only direct-route console 404 was the previously noted nonbreaking favicon request.
+- Presentation screenshot: a separate tile check waited for the final map viewport; 12/12 visible OpenStreetMap tile images had loaded with successful 200 responses, then `artifacts/phase2/grid-map.png` was retaken and visually inspected with a complete basemap, grid, legend, and panel. Some earlier tile requests were aborted during Leaflet's initial view change; they are not represented as failed final tiles. Browser scripts/screenshots and verification outputs remain ignored, not committed.
+- The dedicated preview session started for this check was stopped. No push, merge, history rewrite, Phase 3 work, or Task 12 work was performed.
+
+### Task 11 command results
+
+| Command/context | Exit | Result |
+|---|---:|---|
+| `npm.cmd ci` in working checkout | 1 | Windows `EPERM` on a native module held by existing Vite processes; repaired afterward. |
+| `npm.cmd ci` in clean HEAD snapshot | 0 | 415 packages installed; 18 dependency advisories reported. |
+| `npm.cmd run build`; `npm.cmd run lint` in clean snapshot | 0 each | Passed; inherited bundle-size warning only. |
+| `node --test tests/wifi.test.cjs` | 0 | 5 passed; 0 failed/skipped. |
+| `node --test tests/spatial.test.cjs` | 0 | 25 passed; 0 failed/skipped. |
+| `node --test tests/spatial-ui.test.cjs` | 0 | 19 passed; 0 failed/skipped. |
+| `npm.cmd test` in clean snapshot | 0 | 49 passed; 0 failed/skipped. |
+| Working-checkout repair, `npm.cmd test`, build, lint | 0 each | 49 tests passed; build/lint passed; npm cleanup warnings noted above. |
+| Regenerate/hash and four-location privacy validation | 0 | Three regenerated hashes matched; schema/privacy/geometry checks passed. |
+| Clean-build production preview browser check | 0 | Four routes, requests, interactions, failure states, and six chart tooltips passed. |
+| Final-tile screenshot check | 0 | 12/12 visible tiles loaded; `grid-map.png` updated and visually inspected. |
+| `git diff --check` | 0 | Passed. |
+
+Next task: **Task 12** acceptance audit and report. Do not start it in the Task 11 turn.
