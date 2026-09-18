@@ -218,3 +218,20 @@
     display: none;
   }
 }
+
+/* ─── Mobile touch & safe-area ─── */
+@layer base {
+  /* Prevent 300ms tap delay on mobile */
+  html {
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
+    overscroll-behavior: none;
+  }
+
+  /* Account for bottom tab bar on mobile (56px tab bar + safe area) */
+  @media (max-width: 767px) {
+    body {
+      padding-bottom: calc(3.5rem + env(safe-area-inset-bottom, 0px));
+    }
+  }
+}

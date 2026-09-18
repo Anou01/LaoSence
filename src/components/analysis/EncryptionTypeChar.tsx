@@ -13,8 +13,8 @@ export function EncryptionTypeChart({ data }: { data: SummaryChartData['encrypti
       <CardHeader className="border-b px-5 py-3">
         <CardTitle className="text-sm">Encryption Mix</CardTitle>
       </CardHeader>
-      <CardContent className="flex items-center gap-6 px-5 py-4">
-        <div className="relative h-36 w-36 shrink-0">
+      <CardContent className="flex flex-col items-center gap-4 px-5 py-4 sm:flex-row sm:gap-6">
+        <div className="relative h-32 w-32 shrink-0 sm:h-36 sm:w-36">
           <ResponsiveContainer width="100%" height="100%">
             <PieChart>
               <Pie data={data} dataKey="observations" nameKey="browser" innerRadius="60%" outerRadius="90%" startAngle={90} endAngle={-270} paddingAngle={1}>
@@ -23,7 +23,7 @@ export function EncryptionTypeChart({ data }: { data: SummaryChartData['encrypti
             </PieChart>
           </ResponsiveContainer>
         </div>
-        <div className="space-y-1.5">
+        <div className="w-full space-y-1.5 sm:w-auto">
           {data.map((d, i) => (
             <div key={d.browser} className="flex items-center gap-2 text-xs">
               <span className="inline-block h-2.5 w-2.5 rounded-full" style={{ backgroundColor: COLORS[i % COLORS.length] }} />

@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom';
-import { X, Wifi, Radio, Signal, Activity } from 'lucide-react';
+import { X, Wifi, Radio, Signal, Activity, Shield, GitCompareArrows } from 'lucide-react';
 import type { AggregateMetrics, PresetArea } from '@/type/spatial';
 import { areaPresentation } from '@/utils/areaPresentation';
 
@@ -15,10 +15,18 @@ const SECURITY_COLORS: Record<string, string> = {
   Open: '#ef4444',
   OWE: '#22c55e',
   'WPA Personal': '#f59e0b',
-  'WPA2 Personal': '#0f766e',
-  'WPA2 Enterprise': '#0d9488',
+  'WPA2 Personal': '#0d9488',
+  'WPA2 Enterprise': '#0891b2',
   'WPA3 Personal': '#22c55e',
 };
+
+function getSignalQuality(medianDbm: number | null) {
+  if (medianDbm === null) return { label: 'No data', color: 'bg-slate-100 text-slate-600', bars: 0 };
+  if (medianDbm >= -65) return { label: 'Strong', color: 'bg-emerald-50 text-emerald-700 border border-emerald-200', bars: 4 };
+  if (medianDbm >= -75) return { label: 'Good', color: 'bg-teal-50 text-teal-700 border border-teal-200', bars: 3 };
+  if (medianDbm >= -85) return { label: 'Fair', color: 'bg-amber-50 text-amber-700 border border-amber-200', bars: 2 };
+  return { label: 'Weak', color: 'bg-rose-50 text-rose-700 border border-rose-200', bars: 1 };
+}
 
 export function AreaIntelligencePanel({
   title,
@@ -28,17 +36,38 @@ export function AreaIntelligencePanel({
   onClose,
 }: AreaIntelligencePanelProps) {
   const values = areaPresentation(metrics);
+  const signalQuality = getSignalQuality(metrics.medianSignalDbm);
+
+  // Parse 2.4G & 5G numbers for the visual progress bar
+  const twoFourPct = parseInt(values.twoPointFourShare, 10) || 0;
+  const fivePct = parseInt(values.fiveShare, 10) || 0;
 
   return (
     <section
       data-testid="area-intelligence"
       aria-label={`${title} intelligence`}
-      className="space-y-4 text-sm text-slate-800"
+      className="space-y-3 text-sm text-slate-800"
     >
       {/* Header */}
-      <div className="flex items-start justify-between">
+      <div className="flex items-start justify-between border-b border-slate-100 pb-2.5">
         <div>
-          <h2 className="text-base font-bold text-slate-900">Area Intelligence</h2>
+          <div className="flex items-center gap-2">
+            <h2 className="text-base font-bold tracking-tight text-slate-900">
+              {area ? title : <>Cell <span data-testid="selected-cell-id">{title.replace('Cell ', '')}</span></>}
+            </h2>
+            {area && (
+              <span className="rounded-full bg-teal-50 px-2 py-0.5 text-[11px] font-semibold text-teal-700">
+                {area.areaKm2Approx.toFixed(2)} km²
+              </span>
+            )}
+          </div>
+          {area ? (
+            <p className="mt-0.5 text-xs text-slate-500">
+              Grid ID: <span className="font-mono text-slate-700">LA-VT-{area.cellIds[0]?.slice(0, 4)}</span> · {area.bounds.north.toFixed(4)}, {area.bounds.west.toFixed(4)}
+            </p>
+          ) : (
+            <p className="mt-0.5 text-xs text-slate-500">250m Survey Cell Unit</p>
+          )}
         </div>
         {onClose && (
           <button
@@ -52,117 +81,131 @@ export function AreaIntelligencePanel({
         )}
       </div>
 
-      {/* Area name + ID */}
-      <div className="flex items-center gap-2">
-        <div className="flex h-6 w-6 items-center justify-center rounded-full bg-teal-100 text-teal-700">
-          <svg viewBox="0 0 24 24" className="h-3.5 w-3.5" fill="currentColor">
-            <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z" />
-          </svg>
+      {/* Primary KPI 2-Column Cards */}
+      <div className="grid grid-cols-2 gap-2">
+        <div className="rounded-xl border border-slate-100 bg-slate-50/80 p-2.5">
+          <div className="flex items-center gap-1.5 text-slate-500">
+            <Wifi className="h-3.5 w-3.5 text-teal-600" />
+            <span className="text-[11px] font-medium">Network IDs</span>
+          </div>
+          <p className="mt-1 text-lg font-bold tabular-nums text-slate-900">{values.identifiers}</p>
         </div>
-        <div>
-          <p className="font-semibold text-slate-900">
-            {area ? title : <>Cell <span data-testid="selected-cell-id">{title.replace('Cell ', '')}</span></>}
-          </p>
-          {area && (
-            <p className="text-[11px] text-slate-500">
-              Grid ID: LA-VT-{area.cellIds[0]?.slice(0, 4)}
-              <br />
-              {area.bounds.north.toFixed(4)}, {area.bounds.west.toFixed(4)}
-            </p>
+        <div className="rounded-xl border border-slate-100 bg-slate-50/80 p-2.5">
+          <div className="flex items-center gap-1.5 text-slate-500">
+            <Radio className="h-3.5 w-3.5 text-teal-600" />
+            <span className="text-[11px] font-medium">Observations</span>
+          </div>
+          <p className="mt-1 text-lg font-bold tabular-nums text-slate-900">{values.observations}</p>
+        </div>
+      </div>
+
+      {/* Signal Strength Quality Meter */}
+      <div className="rounded-xl border border-slate-100 bg-slate-50/80 p-2.5">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-1.5 text-xs font-medium text-slate-600">
+            <Signal className="h-3.5 w-3.5 text-teal-600" />
+            <span>Median Recorded Signal</span>
+          </div>
+          <span className={`inline-flex items-center rounded-md px-1.5 py-0.5 text-[10px] font-bold ${signalQuality.color}`}>
+            {signalQuality.label}
+          </span>
+        </div>
+        <div className="mt-2 flex items-center justify-between">
+          <span className="text-base font-bold tabular-nums text-slate-900">{values.medianSignal}</span>
+          {/* Signal 4-bar indicator */}
+          <div className="flex items-end gap-1" title={signalQuality.label}>
+            {[1, 2, 3, 4].map((bar) => (
+              <div
+                key={bar}
+                className={`w-1.5 rounded-xs transition-all ${
+                  bar <= signalQuality.bars
+                    ? bar <= 2
+                      ? 'bg-amber-500'
+                      : 'bg-teal-600'
+                    : 'bg-slate-200'
+                }`}
+                style={{ height: `${bar * 4 + 4}px` }}
+              />
+            ))}
+          </div>
+        </div>
+      </div>
+
+      {/* Dual-Band Distribution (Visual Segmented Bar) */}
+      <div className="rounded-xl border border-slate-100 bg-slate-50/80 p-2.5">
+        <div className="flex items-center justify-between text-xs font-medium text-slate-600">
+          <div className="flex items-center gap-1.5">
+            <Activity className="h-3.5 w-3.5 text-teal-600" />
+            <span>Frequency Bands</span>
+          </div>
+          <div className="flex items-center gap-3 text-[11px]">
+            <span className="flex items-center gap-1 text-slate-700">
+              <span className="h-2 w-2 rounded-full bg-teal-600" />
+              2.4 GHz <b className="text-slate-900">{values.twoPointFourShare}</b>
+            </span>
+            <span className="flex items-center gap-1 text-slate-700">
+              <span className="h-2 w-2 rounded-full bg-blue-600" />
+              5 GHz <b className="text-slate-900">{values.fiveShare}</b>
+            </span>
+          </div>
+        </div>
+        {/* Segmented spectrum bar */}
+        <div className="mt-2 flex h-2.5 w-full overflow-hidden rounded-full bg-slate-200">
+          {twoFourPct > 0 && (
+            <div
+              className="bg-teal-600 transition-all"
+              style={{ width: `${twoFourPct}%` }}
+              title={`2.4 GHz: ${values.twoPointFourShare}`}
+            />
+          )}
+          {fivePct > 0 && (
+            <div
+              className="bg-blue-600 transition-all"
+              style={{ width: `${fivePct}%` }}
+              title={`5 GHz: ${values.fiveShare}`}
+            />
           )}
         </div>
       </div>
 
-      {/* Thumbnail placeholder */}
-      <div className="h-20 overflow-hidden rounded-lg bg-gradient-to-br from-teal-400/20 via-emerald-200/30 to-sky-300/20">
-        <div className="flex h-full items-center justify-center text-xs text-teal-600/60">
-          {area ? `${area.name} · ${area.areaKm2Approx.toFixed(2)} km²` : title}
-        </div>
-      </div>
-
-      {/* Metrics rows with icons */}
-      <div className="space-y-3">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2 text-slate-600">
-            <Wifi className="h-3.5 w-3.5" />
-            <span className="text-xs">Observed network identifiers</span>
-          </div>
-          <span className="text-base font-bold tabular-nums text-slate-900">{values.identifiers}</span>
-        </div>
-
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2 text-slate-600">
-            <Radio className="h-3.5 w-3.5" />
-            <span className="text-xs">Observations</span>
-          </div>
-          <span className="text-base font-bold tabular-nums text-slate-900">{values.observations}</span>
-        </div>
-
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2 text-slate-600">
-            <Signal className="h-3.5 w-3.5" />
-            <span className="text-xs">Median recorded signal</span>
-          </div>
-          <span className="text-base font-bold tabular-nums text-slate-900">{values.medianSignal}</span>
-        </div>
-
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2 text-slate-600">
-            <Activity className="h-3.5 w-3.5" />
-            <span className="text-xs">2.4 GHz share</span>
-          </div>
-          <span className="text-base font-bold tabular-nums text-slate-900">{values.twoPointFourShare}</span>
-        </div>
-
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2 text-slate-600">
-            <Activity className="h-3.5 w-3.5" />
-            <span className="text-xs">5 GHz share</span>
-          </div>
-          <span className="text-base font-bold tabular-nums text-slate-900">{values.fiveShare}</span>
-        </div>
-      </div>
-
-      {/* Security mix */}
-      <div>
-        <h3 className="flex items-center gap-1.5 text-xs font-semibold text-slate-700">
-          <svg viewBox="0 0 24 24" className="h-3.5 w-3.5" fill="currentColor"><path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4z" /></svg>
-          Advertised security mix
+      {/* Advertised Security Mix */}
+      <div className="rounded-xl border border-slate-100 bg-slate-50/80 p-2.5">
+        <h3 className="flex items-center gap-1.5 text-xs font-medium text-slate-600">
+          <Shield className="h-3.5 w-3.5 text-teal-600" />
+          <span>Advertised Security Mix</span>
         </h3>
         {values.securityMix.length === 0 ? (
-          <p className="mt-2 text-slate-500">No recorded data</p>
+          <p className="mt-1.5 text-xs text-slate-500">No recorded data</p>
         ) : (
-          <ul className="mt-2 space-y-1.5">
-            {values.securityMix.map(({ label, percentage }) => (
-              <li key={label} className="flex items-center justify-between gap-3">
-                <div className="flex items-center gap-2">
+          <div className="mt-2 space-y-1.5">
+            {values.securityMix.slice(0, 4).map(({ label, percentage }) => (
+              <div key={label} className="flex items-center justify-between text-xs">
+                <div className="flex items-center gap-1.5">
                   <span
-                    className="inline-block h-2.5 w-2.5 rounded-full"
+                    className="h-2 w-2 rounded-full shrink-0"
                     style={{ backgroundColor: SECURITY_COLORS[label] ?? '#64748b' }}
                   />
-                  <span className="text-xs text-slate-600">{label}</span>
+                  <span className="text-slate-700">{label}</span>
                 </div>
-                <span className="text-xs font-semibold tabular-nums text-slate-700">{percentage}</span>
-              </li>
+                <span className="font-semibold tabular-nums text-slate-900">{percentage}</span>
+              </div>
             ))}
-          </ul>
+          </div>
         )}
       </div>
 
-      {/* Most observed channels */}
-      <div>
-        <h3 className="flex items-center gap-1.5 text-xs font-semibold text-slate-700">
-          <svg viewBox="0 0 24 24" className="h-3.5 w-3.5" fill="currentColor"><path d="M3 13h2v8H3zm4-4h2v12H7zm4-4h2v16h-2zm4 4h2v12h-2zm4 4h2v8h-2z" /></svg>
-          Most observed channels
-        </h3>
-        {values.channels.length === 0 ? (
-          <p className="mt-2 text-xs text-slate-500">No recorded channels</p>
-        ) : (
-          <div className="mt-2 grid grid-cols-3 gap-x-4 gap-y-1">
+      {/* Top Channels as Badges */}
+      {values.channels.length > 0 && (
+        <div>
+          <h3 className="mb-1.5 text-xs font-medium text-slate-600">Most Observed Channels</h3>
+          <div className="flex flex-wrap gap-1.5">
             {values.channels.map(({ channel, observations }) => (
-              <div key={channel} className="flex items-center justify-between gap-1">
-                <span className="text-xs font-medium text-slate-700">{channel}</span>
-                <span className="text-[10px] tabular-nums text-slate-500">
+              <div
+                key={channel}
+                className="flex items-center gap-1 rounded-lg border border-slate-200 bg-white px-2 py-1 text-xs shadow-2xs"
+              >
+                <span className="font-semibold text-slate-800">Ch {channel}</span>
+                <span className="text-[10px] text-slate-500 tabular-nums">
                   {metrics.observationCount > 0
                     ? `${Math.round((observations / metrics.observationCount) * 100)}%`
                     : '—'}
@@ -170,16 +213,20 @@ export function AreaIntelligencePanel({
               </div>
             ))}
           </div>
-        )}
-      </div>
+        </div>
+      )}
 
+      {/* Integrated Action Footer */}
       {area && showCompareLink && (
-        <Link
-          className="sticky bottom-0 flex w-full items-center justify-center rounded-lg bg-primary px-4 py-2.5 text-sm font-bold text-white shadow-sm transition-colors hover:bg-primary/90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-teal-800"
-          to="/compare"
-        >
-          Compare areas →
-        </Link>
+        <div className="pt-1">
+          <Link
+            className="flex w-full items-center justify-center gap-2 rounded-xl bg-primary px-4 py-2.5 text-xs font-bold text-white shadow-sm transition-all hover:bg-primary/90 active:scale-[0.99] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-teal-800"
+            to="/compare"
+          >
+            <GitCompareArrows className="h-4 w-4" />
+            Compare this area →
+          </Link>
+        </div>
       )}
     </section>
   );

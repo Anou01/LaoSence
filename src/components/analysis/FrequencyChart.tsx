@@ -17,8 +17,8 @@ export function FrequencyChart({ data }: { data: SummaryChartData['frequency'] }
       <CardHeader className="border-b px-5 py-3">
         <CardTitle className="text-sm">Band Distribution</CardTitle>
       </CardHeader>
-      <CardContent className="flex items-center gap-6 px-5 py-4">
-        <div className="relative h-36 w-36 shrink-0">
+      <CardContent className="flex flex-col items-center gap-4 px-5 py-4 sm:flex-row sm:gap-6">
+        <div className="relative h-32 w-32 shrink-0 sm:h-36 sm:w-36">
           <ResponsiveContainer width="100%" height="100%">
             <PieChart>
               <Pie
@@ -42,7 +42,7 @@ export function FrequencyChart({ data }: { data: SummaryChartData['frequency'] }
             <span className="text-[10px] text-slate-500">{mainBand.band}</span>
           </div>
         </div>
-        <div className="space-y-2">
+        <div className="w-full space-y-2 sm:w-auto">
           {data.map((d, i) => (
             <div key={d.band} className="flex items-center gap-2 text-xs">
               <span className="inline-block h-2.5 w-2.5 rounded-full" style={{ backgroundColor: COLORS[i % COLORS.length] }} />

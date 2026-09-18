@@ -122,12 +122,12 @@ export default function ComparePage() {
   }
 
   return (
-    <div className="mx-auto max-w-6xl space-y-6 px-4 py-6 text-slate-800 sm:px-6">
+    <div className="mx-auto max-w-6xl space-y-4 px-3 py-4 text-slate-800 sm:space-y-6 sm:px-6 sm:py-6">
       {/* Header */}
-      <header className="flex flex-wrap items-center justify-between gap-4">
+      <header className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between sm:gap-4">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight text-slate-900">Compare Areas</h1>
-          <p className="mt-1 text-sm text-slate-600">
+          <h1 className="text-xl font-bold tracking-tight text-slate-900 sm:text-2xl">Compare Areas</h1>
+          <p className="mt-1 text-xs text-slate-600 sm:text-sm">
             Compare equal-size surveyed areas using measured wireless indicators.
           </p>
         </div>
@@ -135,7 +135,7 @@ export default function ComparePage() {
           type="button"
           onClick={() => setShowAddDialog(true)}
           disabled={slots.length >= 5}
-          className="flex items-center gap-1.5 rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-primary/90 disabled:opacity-50"
+          className="flex w-full items-center justify-center gap-1.5 rounded-lg bg-primary px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-primary/90 disabled:opacity-50 sm:w-auto"
         >
           <Plus className="h-4 w-4" />
           Add Area
@@ -181,7 +181,7 @@ export default function ComparePage() {
 
       {/* Area Cards */}
       {slots.length > 0 && (
-        <div className={`grid gap-4 ${slots.length === 1 ? '' : slots.length === 2 ? 'md:grid-cols-2' : slots.length === 3 ? 'md:grid-cols-3' : 'md:grid-cols-2 lg:grid-cols-4'}`}>
+        <div className={`grid gap-3 sm:gap-4 ${slots.length === 1 ? '' : slots.length === 2 ? 'grid-cols-1 sm:grid-cols-2' : slots.length === 3 ? 'grid-cols-1 sm:grid-cols-2 md:grid-cols-3' : 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-4'}`}>
           {slots.map((slot) => (
             <div key={slot.id} className="rounded-xl border border-slate-200 bg-white shadow-sm overflow-hidden">
               {/* Card header */}
@@ -211,13 +211,14 @@ export default function ComparePage() {
 
       {/* Comparison Table */}
       {slots.length >= 2 && (
-        <div className="overflow-x-auto rounded-xl border border-slate-200 bg-white shadow-sm">
+        <div className="-mx-3 overflow-x-auto sm:mx-0 sm:rounded-xl sm:border sm:border-slate-200 sm:shadow-sm">
+        <div className="min-w-[480px] rounded-xl border border-slate-200 bg-white shadow-sm sm:min-w-0 sm:border-0 sm:shadow-none">
           <table className="w-full text-sm">
             <thead>
               <tr className="border-b border-slate-100">
-                <th className="px-4 py-3 text-left text-xs font-semibold text-slate-600 w-48"></th>
+                <th className="sticky left-0 bg-white px-3 py-2.5 text-left text-xs font-semibold text-slate-600 sm:px-4 sm:py-3 sm:w-48"></th>
                 {slots.map((slot) => (
-                  <th key={slot.id} className="px-4 py-3 text-center text-xs font-bold" style={{ color: slot.color }}>
+                  <th key={slot.id} className="px-3 py-2.5 text-center text-xs font-bold sm:px-4 sm:py-3" style={{ color: slot.color }}>
                     {slot.name}
                   </th>
                 ))}
@@ -306,6 +307,7 @@ export default function ComparePage() {
             </tbody>
           </table>
         </div>
+        </div>
       )}
 
       {/* Insights */}
@@ -342,11 +344,11 @@ export default function ComparePage() {
 function CompareRow({ label, icon, values }: { label: string; icon: React.ReactNode; values: string[] }) {
   return (
     <tr className="border-t border-slate-100">
-      <td className="px-4 py-3 text-xs text-slate-600">
-        <div className="flex items-center gap-2">{icon}{label}</div>
+      <td className="sticky left-0 bg-white px-3 py-2.5 text-xs text-slate-600 sm:px-4 sm:py-3">
+        <div className="flex items-center gap-1.5 sm:gap-2">{icon}<span className="whitespace-nowrap">{label}</span></div>
       </td>
       {values.map((v, i) => (
-        <td key={i} className="px-4 py-3 text-center text-sm font-bold tabular-nums text-slate-900">{v}</td>
+        <td key={i} className="px-3 py-2.5 text-center text-sm font-bold tabular-nums text-slate-900 sm:px-4 sm:py-3">{v}</td>
       ))}
     </tr>
   );

@@ -24,8 +24,8 @@ export function AuthenticationMethodsChart({ data: chartData }: { data: SummaryC
       <CardHeader className="border-b px-5 py-3">
         <CardTitle className="text-sm">Authentication / Security Mix</CardTitle>
       </CardHeader>
-      <CardContent className="flex items-center gap-6 px-5 py-4">
-        <div className="relative h-36 w-36 shrink-0">
+      <CardContent className="flex flex-col items-center gap-4 px-5 py-4 sm:flex-row sm:gap-6">
+        <div className="relative h-32 w-32 shrink-0 sm:h-36 sm:w-36">
           <ResponsiveContainer width="100%" height="100%">
             <PieChart>
               <Pie
@@ -45,7 +45,7 @@ export function AuthenticationMethodsChart({ data: chartData }: { data: SummaryC
             </PieChart>
           </ResponsiveContainer>
         </div>
-        <div className="space-y-1.5">
+        <div className="w-full space-y-1.5 sm:w-auto">
           {chartData.map((d) => (
             <div key={d.method} className="flex items-center gap-2 text-xs">
               <span className="inline-block h-2.5 w-2.5 rounded-full" style={{ backgroundColor: COLORS[d.method] ?? DEFAULT_COLOR }} />
