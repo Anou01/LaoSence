@@ -84,7 +84,7 @@ test('loads the primary survey as observations with measured signals', async () 
   ].join('\n');
   const originalFetch = global.fetch;
   global.fetch = async (url) => {
-    assert.equal(url, '/CSV_FILE/Chanthabuly%20merge%20all%20zone.csv');
+    assert.equal(url, '/Chanthabuly%20merge%20all%20zone.csv');
     return { ok: true, text: async () => csv };
   };
   try {

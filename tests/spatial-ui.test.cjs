@@ -29,6 +29,7 @@ function loadTypescript(file, overrides = {}) {
     if (Object.hasOwn(overrides, specifier)) return overrides[specifier];
     if (specifier === '@/type/spatial') return loadTypescript('src/type/spatial.ts');
     if (specifier === '@/utils/spatialMetrics') return loadTypescript('src/utils/spatialMetrics.ts');
+    if (specifier === '@/utils/analyzeWiFiData') return loadTypescript('src/utils/analyzeWiFiData.ts');
     if (specifier === '@/utils/areaPresentation') return loadTypescript('src/utils/areaPresentation.ts');
     if (specifier === '@/components/map/AreaIntelligencePanel') return loadTypescript('src/components/map/AreaIntelligencePanel.tsx');
     if (specifier === '@/components/DatasetLimitations') return loadTypescript('src/components/DatasetLimitations.tsx');
@@ -238,27 +239,22 @@ test('interpretation keeps fixed priority and at most three factual statements',
   assert.doesNotMatch(statements.join(' '), /Winner|Best Location|score|footfall|sales/i);
 });
 
-test('ComparePage defaults to distinct A/B presets and labels disabled duplicate options', () => {
+test('ComparePage immediately shows equal-size Area A vs Area B with measured indicators', () => {
   const React = require('react');
   const { renderToStaticMarkup } = require('react-dom/server');
   const { presets } = readPublicDocuments();
   const { default: ComparePage } = loadTypescript('src/pages/ComparePage.tsx', {
     '@/context/spatialContext': {
-      useSpatialData: () => ({ presetAreas: presets.areas, loading: false, error: null, retry: () => {} }),
+      useSpatialData: () => ({ presetAreas: presets.areas, gridCells: [], loading: false, error: null, retry: () => {} }),
     },
   });
   const html = renderToStaticMarkup(React.createElement(ComparePage));
-  const left = html.match(/<select[^>]*id="compare-area-a"[^>]*>(.*?)<\/select>/s)?.[1];
-  const right = html.match(/<select[^>]*id="compare-area-b"[^>]*>(.*?)<\/select>/s)?.[1];
-  assert.ok(left && right);
-  assert.match(html, /Area A selection/);
-  assert.match(html, /Area B selection/);
-  assert.match(left, /value="area-a" selected=""/);
-  assert.match(right, /value="area-b" selected=""/);
-  assert.match(left, /value="area-b" disabled=""/);
-  assert.match(right, /value="area-a" disabled=""/);
-  assert.equal((html.match(/data-testid="area-intelligence"/g) ?? []).length, 2);
-  assert.match(html, /supplementary site-screening information/);
+  assert.match(html, /Compare equal-size surveyed areas using measured wireless indicators/);
+  assert.match(html, /Area A <span[^>]*>vs<\/span> Area B/);
+  assert.match(html, /0.5625 km² each/);
+  assert.match(html, /Observed network identifiers/);
+  assert.match(html, /Median recorded signal/);
+  assert.match(html, /Add Area/);
   assert.doesNotMatch(html, /Winner|Best Location|business score/i);
 });
 

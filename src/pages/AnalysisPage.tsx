@@ -61,7 +61,7 @@ export default function AnalysisPage() {
                     <Share2 className="h-5 w-5 text-blue-600" />
                   </div>
                   <div>
-                    <p className="text-xs font-medium text-slate-500">Observed network identifiers (SSIDs)</p>
+                    <p className="text-xs font-medium text-slate-500">Observed network identifiers</p>
                     <p className="text-2xl font-bold tabular-nums text-slate-900">
                       {summary.uniqueNetworkCount.toLocaleString('en-US')}
                     </p>

@@ -34,23 +34,16 @@ const SECURITY_COLORS: Record<string, string> = {
 
 export default function ComparePage() {
   const { presetAreas, gridCells, loading, error, retry } = useSpatialData();
-  const [slots, setSlots] = useState<CompareSlot[]>([]);
+  const [selectedSlots, setSelectedSlots] = useState<CompareSlot[] | null>(null);
   const [showAddDialog, setShowAddDialog] = useState(false);
 
-  // Initialize with first 2 preset areas
-  useMemo(() => {
-    if (presetAreas.length >= 2 && slots.length === 0) {
-      setSlots(
-        presetAreas.slice(0, 2).map((area, i) => ({
-          id: area.id,
-          name: area.name,
-          metrics: area as AggregateMetrics,
-          color: SLOT_COLORS[i],
-          gridId: area.cellIds[0]?.slice(0, 4),
-        })),
-      );
-    }
-  }, [presetAreas]);
+  const slots = selectedSlots ?? presetAreas.slice(0, 2).map((area, i) => ({
+    id: area.id,
+    name: area.name,
+    metrics: area as AggregateMetrics,
+    color: SLOT_COLORS[i],
+    gridId: area.cellIds[0]?.slice(0, 4),
+  }));
 
   // Available areas (preset + top grid cells not already selected)
   const availableAreas = useMemo(() => {
@@ -85,18 +78,18 @@ export default function ComparePage() {
 
   const addSlot = (item: typeof availableAreas[0]) => {
     if (slots.length >= 5) return;
-    setSlots((prev) => [...prev, {
+    setSelectedSlots([...slots, {
       id: item.id,
       name: item.name,
       metrics: item.metrics,
-      color: SLOT_COLORS[prev.length % SLOT_COLORS.length],
+      color: SLOT_COLORS[slots.length % SLOT_COLORS.length],
       gridId: item.gridId,
     }]);
     setShowAddDialog(false);
   };
 
   const removeSlot = (id: string) => {
-    setSlots((prev) => prev.filter((s) => s.id !== id));
+    setSelectedSlots(slots.filter((s) => s.id !== id));
   };
 
   // Generate insights between first two areas
@@ -135,7 +128,7 @@ export default function ComparePage() {
         <div>
           <h1 className="text-2xl font-bold tracking-tight text-slate-900">Compare Areas</h1>
           <p className="mt-1 text-sm text-slate-600">
-            Evaluate locations with data-driven wireless insights.
+            Compare equal-size surveyed areas using measured wireless indicators.
           </p>
         </div>
         <button
@@ -148,6 +141,15 @@ export default function ComparePage() {
           Add Area
         </button>
       </header>
+
+      {slots.length >= 2 && (
+        <p className="text-center text-sm font-semibold text-slate-700">
+          {slots[0].name} <span className="mx-2 text-teal-700">vs</span> {slots[1].name}
+          {presetAreas.some((area) => area.id === slots[0].id) && presetAreas.some((area) => area.id === slots[1].id) && (
+            <span className="ml-2 font-normal text-slate-500">· 0.5625 km² each</span>
+          )}
+        </p>
+      )}
 
       {/* Add Area Dialog */}
       {showAddDialog && (
@@ -223,7 +225,7 @@ export default function ComparePage() {
             </thead>
             <tbody>
               <CompareRow
-                label="Observed network identifiers (SSIDs)"
+                label="Observed network identifiers"
                 icon={<Wifi className="h-3.5 w-3.5" />}
                 values={slots.map((s) => s.metrics.uniqueNetworkCount.toLocaleString())}
               />
@@ -233,7 +235,7 @@ export default function ComparePage() {
                 values={slots.map((s) => s.metrics.observationCount.toLocaleString())}
               />
               <CompareRow
-                label="Median signal"
+                label="Median recorded signal"
                 icon={<Signal className="h-3.5 w-3.5" />}
                 values={slots.map((s) => s.metrics.medianSignalDbm !== null ? `${s.metrics.medianSignalDbm} dBm` : '—')}
               />
@@ -257,7 +259,7 @@ export default function ComparePage() {
               <tr className="border-t border-slate-100">
                 <td className="px-4 py-3 text-xs text-slate-600 flex items-center gap-2">
                   <Shield className="h-3.5 w-3.5" />
-                  Security mix
+                  Advertised security mix
                 </td>
                 {slots.map((slot) => {
                   const total = slot.metrics.observationCount;

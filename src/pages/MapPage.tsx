@@ -46,8 +46,8 @@ type MapSelection = { kind: 'cell'; id: string } | { kind: 'preset'; id: PresetA
 export default function MapPage() {
   const { gridCells, presetAreas, rawData, loading, error, retry } = useSpatialData();
   const [selection, setSelection] = useState<MapSelection>(null);
-  const [showHeatmap, setShowHeatmap] = useState(true);
-  const [show3D, setShow3D] = useState(true);
+  const [showHeatmap, setShowHeatmap] = useState(false);
+  const [show3D, setShow3D] = useState(false);
   const mapRef = useRef<MapRef>(null);
   const metric = DEFAULT_METRIC;
 
@@ -65,7 +65,7 @@ export default function MapPage() {
 
   // Build GeoJSON for individual WiFi observation points (from raw CSV)
   const wifiPointsGeoJSON = useMemo(() => {
-    if (!rawData || rawData.length === 0) return null;
+    if (!showHeatmap || !rawData || rawData.length === 0) return null;
     // Sample points to limit rendering (max ~8000 for performance)
     const step = Math.max(1, Math.floor(rawData.length / 8000));
     const features = [];
@@ -85,7 +85,11 @@ export default function MapPage() {
       });
     }
     return { type: 'FeatureCollection' as const, features };
-  }, [rawData]);
+  }, [rawData, showHeatmap]);
+
+  useEffect(() => {
+    mapRef.current?.easeTo({ pitch: show3D ? 45 : 0, bearing: show3D ? -10 : 0, duration: 500 });
+  }, [show3D]);
 
   // Build GeoJSON for grid cells
   const gridGeoJSON = useMemo(() => {
@@ -187,14 +191,15 @@ export default function MapPage() {
         <div className="pointer-events-auto flex flex-wrap items-start justify-between gap-3">
           <div className="rounded-xl bg-white/95 px-4 py-2.5 shadow-lg backdrop-blur-sm">
             <h1 className="text-base font-bold text-slate-900">Wireless Infrastructure Map</h1>
-            <p className="text-[11px] text-slate-500">
-              Explore wireless activity across the city with privacy-safe aggregated data.
+            <p className="text-xs text-slate-600">
+              250m spatial intelligence from observed wireless infrastructure
             </p>
           </div>
 
           <div className="flex items-center gap-2">
             {!loading && !error && presetAreas.length > 0 && (
               <div className="rounded-xl bg-white/95 px-3 py-2 shadow-lg backdrop-blur-sm">
+                <p className="mb-1 text-[11px] font-semibold uppercase tracking-wide text-slate-500">Explore area:</p>
                 <PresetAreaControls
                   areas={presetAreas}
                   selectedId={selectedArea?.id ?? null}
@@ -382,13 +387,18 @@ export default function MapPage() {
               <Layers className="h-3.5 w-3.5" />
               3D Grid
             </button>
+            {show3D && (
+              <p className="max-w-48 rounded-lg bg-white/95 px-3 py-2 text-[11px] leading-4 text-slate-700 shadow-lg">
+                Taller cells represent more observed network identifiers per 250m cell.
+              </p>
+            )}
           </div>
         )}
 
         {/* Legend — bottom left */}
         {!loading && !error && (
           <div className="absolute bottom-6 left-3 z-10">
-            <GridLegend scale={intensityScale} metric={metric} />
+            <GridLegend scale={intensityScale} metric={metric} show3D={show3D} />
           </div>
         )}
 

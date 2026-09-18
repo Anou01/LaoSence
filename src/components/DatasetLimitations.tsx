@@ -7,11 +7,9 @@ export function DatasetLimitations() {
         <AlertTriangle className="h-4 w-4 text-amber-600" />
         Dataset limitations
       </h2>
-      <ul className="mt-2 list-disc space-y-1 pl-5 text-xs leading-5 text-amber-900/80">
-        <li>Data is collected from passive, wardriving observations and may not represent all networks in an area.</li>
-        <li>Locations are aggregated into grid cells to preserve privacy.</li>
-        <li>Signal strength and counts are indicative only and can be affected by environment, device type, and time of day.</li>
-      </ul>
+      <p className="mt-2 text-xs leading-5 text-amber-900/80">
+        Historical passive wireless observations; coverage may vary. These indicators describe observed wireless infrastructure and do not directly measure population, footfall, sales, internet speed, or business suitability.
+      </p>
     </section>
   );
 }

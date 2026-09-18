@@ -293,7 +293,7 @@ export function generateCompareInsights(
 ): CompareInsight[] {
   const insights: CompareInsight[] = [];
 
-  // 1. Wireless activity comparison
+  // 1. Observation count comparison
   if (metricsA.observationCount > 0 && metricsB.observationCount > 0) {
     const diff = Math.abs(metricsA.observationCount - metricsB.observationCount);
     const smaller = Math.min(metricsA.observationCount, metricsB.observationCount);
@@ -302,8 +302,8 @@ export function generateCompareInsights(
       const higher = metricsA.observationCount > metricsB.observationCount ? areaAName : areaBName;
       const lower = higher === areaAName ? areaBName : areaAName;
       insights.push({
-        title: `${higher} has higher wireless activity`,
-        description: `~${pctDiff}% more observations than ${lower}, indicating greater foot traffic and usage.`,
+        title: 'Recorded observations',
+        description: `${higher} recorded approximately ${pctDiff}% more wireless observations than ${lower} in this survey.`,
         icon: 'activity',
       });
     }
@@ -321,8 +321,8 @@ export function generateCompareInsights(
       const higherPct = Math.round((fiveA > fiveB ? fiveA : fiveB) * 100);
       const lowerPct = Math.round((fiveA > fiveB ? fiveB : fiveA) * 100);
       insights.push({
-        title: `${higher} has a stronger 5 GHz presence`,
-        description: `${higherPct}% of networks on 5 GHz (vs ${lowerPct}% in ${lower}), suggesting newer infrastructure.`,
+        title: 'Observed 5 GHz share',
+        description: `${higher} shows a larger observed 5 GHz share: ${higherPct}% compared with ${lowerPct}% in ${lower}.`,
         icon: 'radio',
       });
     }
@@ -335,12 +335,12 @@ export function generateCompareInsights(
   const openB = metricsB.observationCount > 0
     ? (metricsB.authenticationCounts['Open'] ?? 0) / metricsB.observationCount
     : 0;
-  if (Math.abs(openA - openB) >= 0.03) {
-    const moreSecure = openA < openB ? areaAName : areaBName;
-    const lessSecure = moreSecure === areaAName ? areaBName : areaAName;
+  if (metricsA.observationCount > 0 && metricsB.observationCount > 0 && Math.abs(openA - openB) >= 0.03) {
+    const lower = openA < openB ? areaAName : areaBName;
+    const higher = lower === areaAName ? areaBName : areaAName;
     insights.push({
-      title: 'Different network security environments',
-      description: `${moreSecure} shows more secured networks, while ${lessSecure} has a higher share of open networks.`,
+      title: 'Advertised Open networks',
+      description: `${lower} has a lower share of advertised Open networks than ${higher}.`,
       icon: 'shield',
     });
   }
@@ -349,12 +349,13 @@ export function generateCompareInsights(
   if (metricsA.medianSignalDbm !== null && metricsB.medianSignalDbm !== null) {
     const diff = Math.abs(metricsA.medianSignalDbm - metricsB.medianSignalDbm);
     if (diff >= 3) {
-      const better = metricsA.medianSignalDbm > metricsB.medianSignalDbm ? areaAName : areaBName;
-      const betterVal = metricsA.medianSignalDbm > metricsB.medianSignalDbm ? metricsA.medianSignalDbm : metricsB.medianSignalDbm;
-      const worseVal = metricsA.medianSignalDbm > metricsB.medianSignalDbm ? metricsB.medianSignalDbm : metricsA.medianSignalDbm;
+      const higher = metricsA.medianSignalDbm > metricsB.medianSignalDbm ? areaAName : areaBName;
+      const lower = higher === areaAName ? areaBName : areaAName;
+      const higherVal = Math.max(metricsA.medianSignalDbm, metricsB.medianSignalDbm);
+      const lowerVal = Math.min(metricsA.medianSignalDbm, metricsB.medianSignalDbm);
       insights.push({
-        title: `${better} has stronger signal quality`,
-        description: `Median signal of ${betterVal} dBm vs ${worseVal} dBm — a ${diff} dB difference indicating denser infrastructure.`,
+        title: 'Median recorded signal',
+        description: `${higher} has a higher median recorded signal (${higherVal} dBm vs ${lowerVal} dBm in ${lower}), a ${diff} dB difference.`,
         icon: 'signal',
       });
     }
@@ -362,11 +363,11 @@ export function generateCompareInsights(
 
   if (insights.length === 0) {
     insights.push({
-      title: 'Similar wireless environments',
-      description: 'The selected areas show broadly similar values across all surveyed wireless indicators.',
+      title: 'Similar surveyed indicators',
+      description: 'The selected areas show broadly similar values across these surveyed wireless indicators.',
       icon: 'activity',
     });
   }
 
-  return insights;
+  return insights.slice(0, 3);
 }

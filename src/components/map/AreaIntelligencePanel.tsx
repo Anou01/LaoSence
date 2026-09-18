@@ -85,7 +85,7 @@ export function AreaIntelligencePanel({
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2 text-slate-600">
             <Wifi className="h-3.5 w-3.5" />
-            <span className="text-xs">Observed network identifiers (SSIDs)</span>
+            <span className="text-xs">Observed network identifiers</span>
           </div>
           <span className="text-base font-bold tabular-nums text-slate-900">{values.identifiers}</span>
         </div>
@@ -101,7 +101,7 @@ export function AreaIntelligencePanel({
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2 text-slate-600">
             <Signal className="h-3.5 w-3.5" />
-            <span className="text-xs">Median signal</span>
+            <span className="text-xs">Median recorded signal</span>
           </div>
           <span className="text-base font-bold tabular-nums text-slate-900">{values.medianSignal}</span>
         </div>
@@ -127,7 +127,7 @@ export function AreaIntelligencePanel({
       <div>
         <h3 className="flex items-center gap-1.5 text-xs font-semibold text-slate-700">
           <svg viewBox="0 0 24 24" className="h-3.5 w-3.5" fill="currentColor"><path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4z" /></svg>
-          Security mix
+          Advertised security mix
         </h3>
         {values.securityMix.length === 0 ? (
           <p className="mt-2 text-slate-500">No recorded data</p>
@@ -175,7 +175,7 @@ export function AreaIntelligencePanel({
 
       {area && showCompareLink && (
         <Link
-          className="inline-flex items-center gap-1 text-xs font-semibold text-teal-700 underline underline-offset-2 transition-colors hover:text-teal-900 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-teal-800"
+          className="sticky bottom-0 flex w-full items-center justify-center rounded-lg bg-primary px-4 py-2.5 text-sm font-bold text-white shadow-sm transition-colors hover:bg-primary/90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-teal-800"
           to="/compare"
         >
           Compare areas →
